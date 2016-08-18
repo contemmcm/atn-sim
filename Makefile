@@ -22,9 +22,6 @@ all: dump1090 core emane
 install: dump1090 core emane
 	# CORE
 	cd core ; sudo make install
-	sudo cp configs/core/etc/* /etc/core
-	rm -rf ~/.core
-	ln -s `pwd`/configs/core/home ~/.core
 
 	# EMANE
 	cd emane/.debbuild ; sudo dpkg -i *.deb
@@ -33,9 +30,15 @@ install: dump1090 core emane
 	sudo cp -r dump1090 /opt
 
 	# ATN-SIM
+
 	sudo rm -f /usr/local/lib/python2.7/dist-packages/atn
 	sudo ln -s `pwd`/atn/ /usr/local/lib/python2.7/dist-packages/atn
 	sudo ln -s `pwd` /opt/atn-sim
+
+	sudo rm -rf /etc/core
+	rm -rf ~/.core
+	sudo ln -s `pwd`/configs/core/etc/ /etc/core
+	ln -s `pwd`/configs/core/home ~/.core
 
 clean:
 	rm -rf core

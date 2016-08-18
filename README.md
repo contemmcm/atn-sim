@@ -3,7 +3,7 @@ Aeronautical Telecommunications Network (ATN) Simulator
 
 ## Installation
 
-### Ubuntu 16.04
+### Ubuntu 14.04
 
 #### Requirements
 
@@ -24,4 +24,12 @@ sudo apt-get install bash bridge-utils ebtables iproute libev-dev python tcl8.5 
 sudo apt-get install gcc g++ autoconf automake libtool libxml2-dev libprotobuf-dev \
     python-protobuf libpcap-dev libpcre3-dev uuid-dev libace-dev python-stdeb \
     debhelper pkg-config python-lxml python-setuptools protobuf-compiler
+```
+
+#### General 
+```
+sudo apt-get install git subversion ssh iperf tshark tcpdump nmap traceroute \
+    gpsd gpsd-clients ircd-irc2 xchat python-geopy python-numpy python-pip \
+    python-mysqldb python-mysql.connector mysql-server python-matplotlib \
+    python-scipy python-qt4 python-mpi4py libnl1
 ```
