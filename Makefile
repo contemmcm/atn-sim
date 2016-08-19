@@ -12,6 +12,7 @@ core:
 
 emane:
 	git clone https://github.com/adjacentlink/emane.git ;\
+	git checkout v0.9.3                                 ;\
 	cd emane                                            ;\
 	./autogen.sh                                        ;\
 	./configure                                         ;\
