@@ -20,6 +20,19 @@ def set_location(nemid, lat, lon, alt, heading, speed, climb):
                      'altitude=%s' % alt, 'azimuth=%s' % heading, 'elevation=%s' % elev, 'magnitude=%s' % mag])
 
 
+def set_location2(nemid, lat, lon, alt, heading, speed, climb):
+
+    if speed > 0:  # Avoids division by zero
+        elev = math.degrees(math.atan(float(climb)/float(speed)))
+        mag = math.sqrt(float(speed*speed) + float(climb*climb))
+    else:
+        elev = 0.0
+        mag = 0.0
+
+    # Updating location
+    subprocess.call(['/usr/bin/emaneevent-location', str(nemid), 'latitude=%s' % lat, 'longitude=%s' % lon,
+                     'altitude=%s' % alt, 'azimuth=%s' % heading, 'elevation=%s' % elev, 'magnitude=%s' % mag])
+
 def get_nem_location(nem_id):
     locations = get_all_locations()
 

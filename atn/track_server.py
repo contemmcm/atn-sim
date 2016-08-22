@@ -10,6 +10,9 @@ import emane_utils
 
 from .network import mcast_socket
 
+from emanesh.events import EventService
+from emanesh.events import LocationEvent
+
 
 class TrackServer:
 
@@ -50,6 +53,8 @@ class TrackServer:
         pass
 
     def listen(self):
+        service = EventService(('224.1.2.8', 45703, self.net_iface))
+
         # This method is very slow. Future versions will implement distributed version of it.
         self.nodes = []
 
@@ -69,6 +74,8 @@ class TrackServer:
         sock.mcast_add(self.net_tracks, ip)  # Endereco de pistas
 
         while True:
+            event = LocationEvent()
+
             # time.sleep(0.5)
 
             data, sender_addr = sock.recvfrom(1024)
@@ -98,10 +105,16 @@ class TrackServer:
                 if msg_num in self.nodes:
                     print msg_num
                     t1 = time.time()
-                    emane_utils.set_location(nemid=msg_num, lat=msg_lat, lon=msg_lon, alt=msg_alt, heading=msg_azm,
-                                             speed=msg_vel, climb=0.0)
+                    # emane_utils.set_location(nemid=msg_num, lat=msg_lat, lon=msg_lon, alt=msg_alt, heading=msg_azm,
+                    #                         speed=msg_vel, climb=0.0)
+
+                    event.append(msg_num, latitude=msg_lat, longitude=msg_lon, altitude=msg_alt, azimuth=msg_azm,
+                                 magnitude=msg_vel, elevation=0.0)
+
                     t2 = time.time()
-                    print t2-t1
+                    # print t2-t1
+
+            service.publish(0, event)
 
     def _update(self):
         while True:
