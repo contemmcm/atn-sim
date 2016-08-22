@@ -48,3 +48,11 @@ class AdsbFeed(object):
         """Provides azimuth, climb_rate, and speed in meters per second.
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    def get_capabilities(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_type(self):
+        raise NotImplementedError()
