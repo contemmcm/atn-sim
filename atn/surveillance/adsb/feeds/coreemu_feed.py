@@ -182,9 +182,6 @@ class CoreFeed(AdsbFeed):
             self.tracksrv_speed = speed
             self.tracksrv_climb = climb
 
-            print track
-            print speed
-            print climb
-
             cursor.close()
+
             time.sleep(0.5)

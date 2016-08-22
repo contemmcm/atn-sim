@@ -5,19 +5,19 @@ from atn.surveillance.adsb.feeds import coreemu_feed
 
 feed = coreemu_feed.CoreFeed()
 
-feed.gps_start()
-feed.emane_start()
+#feed.gps_start()
+#feed.emane_start()
 feed.tracksrv_start()
 
-time.sleep(5)
+time.sleep(1)
 
 print (feed.gps_latitude, feed.emane_latitude, feed.tracksrv_latitude)
 print (feed.gps_longitude, feed.emane_longitude, feed.tracksrv_longitude)
 print (feed.gps_altitude, feed.emane_altitude, feed.tracksrv_altitude)
 
 tx = adsb_out.AdsbOut(feed)
+tx.start()
 
-# tx.start()
 # while True:
 #     time.sleep(0.4)
 #     airborne_msg = tx.generate_airborne_position()

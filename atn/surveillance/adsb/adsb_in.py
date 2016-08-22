@@ -9,10 +9,15 @@ from .forwarders import dump1090_fwrd
 
 class AdsbIn:
 
+    log_file = "adsbin.log"
+    log_level = logging.DEBUG
+
     net_port = 30001
 
     def __init__(self, config="adsbin.cfg"):
-        self.logger = logging.getLogger('adsb_in_app.AdsBIn')
+        # Logging
+        logging.basicConfig(filename=self.log_file, level=self.log_level, filemode='w',
+                            format='%(asctime)s %(levelname)s: %(message)s')
 
         # List of destination to which received messages will be forwarded to.
         self.forwarders = []
@@ -58,22 +63,20 @@ class AdsbIn:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.bind(('', self.net_port))
 
-        self.logger.info("Waiting on port :" + str(self.net_port))
+        logging.info("Waiting on port :" + str(self.net_port))
+
+        t0 = time.time()
+        num_msgs = 0
 
         while True:
+
             # Buffer size is 1024 bytes
-            data, addr = sock.recvfrom(1024)
+            message, addr = sock.recvfrom(1024)
 
             # Time of arrival
             toa = time.time()
 
-            print (addr, data, toa)
-
-            # ADSB-Out transmits message, nemid and node name.
-            # NEM id and node name are used to calculate a precise time of arrival (TOA)
-            # message, nodename, nemid = data.split()
-            #message, lat_tx, lon_tx, alt_tx = data.split()
-            message = data
+            # logging.debug("\t%s\t%s\t%f" % (addr, data, toa))
 
             # Fix time of arrival for MLAT purposes
             # if self.TOA_SIMULATED:
@@ -85,6 +88,15 @@ class AdsbIn:
             # Forward received ADS-B message to all configured forwarders
             for f in self.forwarders:
                 f.forward(message, toa)
+
+            # Logging
+            t1 = time.time()
+            num_msgs += 1
+
+            if t1 - t0 > 30:
+                logging.info("Throughput = %f msgs/sec" % (num_msgs/(t1-t0)))
+                t0 = time.time()
+                num_msgs = 0
 
     def stop(self):
         pass

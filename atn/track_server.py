@@ -1,3 +1,4 @@
+import logging
 import MySQLdb
 import threading
 import time
@@ -10,6 +11,9 @@ class TrackServer:
 
     update_interval = 1.0
 
+    log_file = "track_server.log"
+    log_level = logging.DEBUG
+
     db_name = 'atn_sim'
     db_user = 'atn_sim'
     db_pass = 'atn_sim'
@@ -19,11 +23,13 @@ class TrackServer:
 
         self.db = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
 
-        cursor = self.db.cursor()
-        cursor.execute("SELECT VERSION()")
-        print cursor.fetchone()
+        # Logging
+        logging.basicConfig(filename=self.log_file, level=self.log_level, filemode='w',
+                            format='%(asctime)s %(levelname)s: %(message)s')
 
     def start(self):
+        logging.info("Intiating sever")
+
         self._init_nodes_table()
         self._init_nems_table()
 
@@ -35,7 +41,7 @@ class TrackServer:
 
     def _update(self):
         while True:
-            t1 = time.time()
+            t0 = time.time()
             nodes = emane_utils.get_all_locations()
 
             cursor = self.db.cursor()
@@ -52,12 +58,20 @@ class TrackServer:
             self.db.commit()
             cursor.close()
 
-            t2 = time.time()
-            print t2 - t1
+            dt = time.time() - t0
 
-            time.sleep(self.update_interval)
+            # Logging
+            logging.info("Tables updated successfully. Processing time: %f s" % dt)
+            if dt > self.update_interval:
+                logging.warning("Position updates is taking longer than %f s" % self.update_interval)
+
+            dt = time.time() - t0
+
+            time.sleep(self.update_interval - dt)
 
     def _init_nodes_table(self):
+
+        logging.info("Initiating table NODE")
 
         session = int(core_utils.get_session_id())
         node_number, node_name = core_utils.get_node_list()
@@ -77,16 +91,24 @@ class TrackServer:
 
     def _init_nems_table(self):
 
+        logging.info("Initiating table NEM")
+
         node_names, node_devs, nemids = core_utils.get_nem_list()
 
         cursor = self.db.cursor()
 
-        cursor.execute("DELETE FROM nem")
+        sql = "DELETE FROM nem"
+        cursor.execute(sql)
+        logging.debug(sql)
 
         for n in range(0, len(node_names)):
             sql = "INSERT INTO nem (nem, node_id, iface) VALUES (%d, (SELECT id FROM node WHERE name='%s'), '%s' )" % (nemids[n], node_names[n], node_devs[n])
-            print sql
             cursor.execute(sql)
+            logging.debug(sql)
 
         self.db.commit()
         cursor.close()
+
+if __name__ == '__main__':
+    t = TrackServer()
+    t.start()

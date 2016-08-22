@@ -32,7 +32,11 @@ def get_nem_location(nem_id):
 def get_all_locations():
     # TODO: this function is very slow and does not scale
 
-    output = subprocess.check_output(["/usr/bin/emanesh", "127.0.0.1", "get", "table", '*', "phy", "LocationEventInfoTable"])
+    # output = subprocess.check_output(["/usr/bin/emanesh", "127.0.0.1",
+    #                                   "get", "table", '*', "phy", "LocationEventInfoTable"])
+    output = subprocess.check_output(["/usr/bin/emanesh", "127.0.0.1",
+                                      "get", "table", "nems", "phy", "LocationEventInfoTable"])
+
     lines = output.splitlines()[2:]
 
     nems = []

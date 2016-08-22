@@ -1,4 +1,5 @@
 import ipcalc
+import logging
 import math
 import netifaces as ni
 import socket
@@ -16,6 +17,9 @@ class AdsbOut:
 
     net_port = 30001
     net_iface = "eth0"
+
+    log_file = "adsbout.log"
+    log_level = logging.DEBUG
 
     # Constants
     EW_DIRECTION = 0
@@ -51,6 +55,10 @@ class AdsbOut:
 
         self.net_dest = str(subnet.broadcast())
 
+        # Logging
+        logging.basicConfig(filename=self.log_file, level=self.log_level, filemode='w',
+                            format='%(asctime)s %(levelname)s: %(message)s')
+
     def start(self):
         print " > Initiating ADS-B Out transmission"
         t1 = threading.Thread(target=self._start_airborne_position, args=())
@@ -67,33 +75,44 @@ class AdsbOut:
         time.sleep(random.randint(0, 5))
 
         while True:
+            t0 = time.time()
             msg = self.generate_aircraft_id()
             self.broadcast(msg)
-            time.sleep(rate)
+            logging.debug("AIRCRAFT ID:\t%s" % msg)
+
+            dt = time.time() - t0
+            time.sleep(rate - dt)
 
     def _start_airborne_position(self, rate=1.0):
         # Startup time
         time.sleep(random.randint(0, 5))
 
         while True:
+            t0 = time.time()
             msg = self.generate_airborne_position()
             self.broadcast(msg)
-            time.sleep(rate)
+            logging.debug("AIR POSITION:\t%s" % msg)
+
+            dt = time.time() - t0
+            time.sleep(rate - dt)
 
     def _start_airborne_velocity(self, rate=1.0):
         # Startup time
         time.sleep(random.randint(0, 5))
 
         while True:
+            t0 = time.time()
             msg = self.generate_airborne_velocity()
             self.broadcast(msg)
-            time.sleep(rate)
+            logging.debug("AIR VELOCITY:\t%s" % msg)
+
+            dt = time.time() - t0
+            time.sleep(rate - dt)
 
     def stop(self):
         pass
 
     def broadcast(self, message):
-        print message
         self.net_sock.sendto(message, (self.net_dest, self.net_port))
 
     def generate_aircraft_id(self):
@@ -172,8 +191,6 @@ class AdsbOut:
             alt_m = 0
             me = 0  # ME=0 : signalling error
 
-        print lat, lon, alt_m
-
         alt = alt_m * 3.28084  # meters to feet
 
         '''Altitude encoding'''
@@ -228,7 +245,6 @@ class AdsbOut:
         """
 
         (heading, vertical_rate, ground_speed) = self.feed.get_velocity()
-        print (heading, vertical_rate, ground_speed)
         (heading_radians, vertical_rate, ground_speed) = adsb_utils.to_unit_adsb(heading, vertical_rate, ground_speed)
 
         # Intent Change Flag = 0, No Change in Intent
