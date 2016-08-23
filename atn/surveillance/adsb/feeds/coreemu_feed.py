@@ -143,20 +143,6 @@ class CoreFeed(AdsbFeed):
                 else:
                     gps_time = time
 
-    def emane_read(self):
-
-        while True:
-            info = emane_utils.get_nem_location(self.nem_id)
-
-            self.emane_latitude = info['latitude']
-            self.emane_longitude = info['longitude']
-            self.emane_altitude = info['altitude']
-            self.emane_track = info['azimuth']
-            self.emane_speed = info['magnitude']
-            self.emane_climb = info['elevation']
-
-            time.sleep(1)
-
     def tracksrv_read(self):
 
         db = MySQLdb.connect(self.tracksrv_dbhost, self.tracksrv_dbuser, self.tracksrv_dbpass, self.tracksrv_dbname)

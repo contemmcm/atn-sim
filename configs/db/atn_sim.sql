@@ -1,18 +1,9 @@
--- MySQL Workbench Forward Engineering
-
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 
--- -----------------------------------------------------
--- Schema atn_sim
--- -----------------------------------------------------
 DROP SCHEMA IF EXISTS `atn_sim` ;
-
--- -----------------------------------------------------
--- Schema atn_sim
--- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `atn_sim` DEFAULT CHARACTER SET utf8 ;
+CREATE SCHEMA IF NOT EXISTS `atn_sim` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci ;
 USE `atn_sim` ;
 
 -- -----------------------------------------------------
@@ -52,6 +43,24 @@ CREATE TABLE IF NOT EXISTS `atn_sim`.`nem` (
   INDEX `fk_nem_node_idx` (`node_id` ASC))
 ENGINE = MEMORY
 COMMENT = '\n';
+
+
+-- -----------------------------------------------------
+-- Table `atn_sim`.`transponder`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `atn_sim`.`transponder` ;
+
+CREATE TABLE IF NOT EXISTS `atn_sim`.`transponder` (
+  `nem` INT NOT NULL,
+  `ssr_beacon` VARCHAR(4) NULL,
+  `ssr_squawk` VARCHAR(4) NULL,
+  `ssr_ident` TINYINT(1) NULL,
+  `callsign` VARCHAR(8) NULL,
+  `performance_type` VARCHAR(45) NULL,
+  `icao24` VARCHAR(6) NULL,
+  `last_update` TIMESTAMP NULL DEFAULT now(),
+  INDEX `fk_transponder_nem1_idx` (`nem` ASC))
+ENGINE = MEMORY;
 
 
 SET SQL_MODE=@OLD_SQL_MODE;

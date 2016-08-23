@@ -117,7 +117,10 @@ class TrackServer:
                         nemid = self.track2nem[msg_num]
                     else:
                         nemid = msg_num
+
                     print (msg_num, nemid)
+
+                    # Update node's position using Emane API
                     event.append(nemid, latitude=msg_lat, longitude=msg_lon, altitude=msg_alt * FT_TO_M,
                                  azimuth=msg_azm, magnitude=msg_vel * KT_TO_MPS, elevation=0.0)
 
