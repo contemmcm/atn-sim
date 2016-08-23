@@ -64,6 +64,9 @@ class TrackServer:
         pass
 
     def listen(self):
+        FT_TO_M = 0.3048
+        KT_TO_MPS = 0.51444444444
+
         service = EventService(('224.1.2.8', 45703, self.net_iface))
 
         # This method is very slow. Future versions will implement distributed version of it.
@@ -86,8 +89,6 @@ class TrackServer:
 
         while True:
             event = LocationEvent()
-
-            # time.sleep(0.5)
 
             data, sender_addr = sock.recvfrom(1024)
 
@@ -117,8 +118,9 @@ class TrackServer:
                     else:
                         nemid = msg_num
                     print (msg_num, nemid)
-                    event.append(nemid, latitude=msg_lat, longitude=msg_lon, altitude=msg_alt, azimuth=msg_azm,
-                                 magnitude=msg_vel, elevation=0.0)
+                    event.append(nemid, latitude=msg_lat, longitude=msg_lon, altitude=msg_alt * FT_TO_M,
+                                 azimuth=msg_azm, magnitude=msg_vel * KT_TO_MPS, elevation=0.0)
+
             service.publish(0, event)
 
     def _update(self):
@@ -206,13 +208,12 @@ class TrackServer:
             tracknumber = data[i][1]
 
             # node number
+            sql = "SELECT a.id, b.nem FROM node a, nem b WHERE a.name='%s' and a.id=b.node_id" % nodename
             cursor = self.db.cursor()
-            cursor.execute("SELECT a.id, b.nem FROM node a, nem b WHERE a.name='%s' and a.id=b.node_id" % nodename)
+            cursor.execute(sql)
             result = cursor.fetchone()
             nodenumber = result[0]
             nemid = result[1]
-
-            print (nodename, nodenumber, nemid, tracknumber)
 
             self.track2nem[tracknumber] = nemid
 
