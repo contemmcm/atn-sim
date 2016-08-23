@@ -1,7 +1,8 @@
+import ConfigParser
 import logging
 import MySQLdb
 import netifaces as ni
-import socket
+import os
 import threading
 import time
 
@@ -29,7 +30,7 @@ class TrackServer:
     db_pass = 'atn_sim'
     db_host = '172.17.255.254'
 
-    def __init__(self):
+    def __init__(self, config="track_server.cfg"):
 
         self.db = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
 
@@ -37,17 +38,27 @@ class TrackServer:
         logging.basicConfig(filename=self.log_file, level=self.log_level, filemode='w',
                             format='%(asctime)s %(levelname)s: %(message)s')
 
+        self.config = None
+
+        if os.path.exists(config):
+            self.config = ConfigParser.ConfigParser()
+            self.config.read(config)
+
+
+            # self.id = conf.get("General", "id")
+
     def start(self):
         logging.info("Initiating sever")
 
         self._init_nodes_table()
         self._init_nems_table()
+        self._init_mapings()
 
         t1 = threading.Thread(target=self._update, args=())
         t2 = threading.Thread(target=self.listen, args=())
 
         t1.start()
-        # t2.start()
+        t2.start()
 
     def stop(self):
         pass
@@ -80,8 +91,6 @@ class TrackServer:
 
             data, sender_addr = sock.recvfrom(1024)
 
-            # print (data, sender_addr)
-
             message = data.split("#")
 
             # ex: 101#114#1#7003#-1#4656.1#-16.48614#-47.947058#210.8#9.7#353.9#TAM6543#B737#21653.3006492
@@ -103,17 +112,13 @@ class TrackServer:
                 msg_tim = float(message[13])  # timestamp (see "hora de inicio")
 
                 if msg_num in self.nodes:
-                    print msg_num
-                    t1 = time.time()
-                    # emane_utils.set_location(nemid=msg_num, lat=msg_lat, lon=msg_lon, alt=msg_alt, heading=msg_azm,
-                    #                         speed=msg_vel, climb=0.0)
-
-                    event.append(msg_num, latitude=msg_lat, longitude=msg_lon, altitude=msg_alt, azimuth=msg_azm,
+                    if msg_num in self.track2nem:
+                        nemid = self.track2nem[msg_num]
+                    else:
+                        nemid = msg_num
+                    print (msg_num, nemid)
+                    event.append(nemid, latitude=msg_lat, longitude=msg_lon, altitude=msg_alt, azimuth=msg_azm,
                                  magnitude=msg_vel, elevation=0.0)
-
-                    t2 = time.time()
-                    # print t2-t1
-
             service.publish(0, event)
 
     def _update(self):
@@ -123,6 +128,7 @@ class TrackServer:
 
             cursor = self.db.cursor()
             for n in nodes:
+
                 sql = "UPDATE nem set latitude=%f, longitude=%f, altitude=%f, " \
                       "pitch=%f, roll=%f, yaw=%f, " \
                       "azimuth=%f, elevation=%f, magnitude=%f,  " \
@@ -185,6 +191,30 @@ class TrackServer:
 
         self.db.commit()
         cursor.close()
+
+    def _init_mapings(self):
+
+        self.track2nem = {}
+
+        if self.config is None:
+            return
+
+        data = self.config.items("Tracks")
+
+        for i in range(0, len(data)):
+            nodename = data[i][0]
+            tracknumber = data[i][1]
+
+            # node number
+            cursor = self.db.cursor()
+            cursor.execute("SELECT a.id, b.nem FROM node a, nem b WHERE a.name='%s' and a.id=b.node_id" % nodename)
+            result = cursor.fetchone()
+            nodenumber = result[0]
+            nemid = result[1]
+
+            print (nodename, nodenumber, nemid, tracknumber)
+
+            self.track2nem[tracknumber] = nemid
 
 
 if __name__ == '__main__':
