@@ -45,8 +45,6 @@ class AdsbFeed(object):
 
     @abstractmethod
     def get_icao24(self):
-        """Provides azimuth, climb_rate, and speed in meters per second.
-        """
         raise NotImplementedError()
 
     @abstractmethod

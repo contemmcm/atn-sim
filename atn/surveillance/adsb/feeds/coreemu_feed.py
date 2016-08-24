@@ -56,6 +56,25 @@ class CoreFeed(AdsbFeed):
         self.nem_id = core_utils.get_nem_id(node_name=self.node_name, session_id=self.session_id)
         self.node_number = core_utils.get_node_number(node_name=self.node_name, session_id=self.session_id)
 
+        self.db = MySQLdb.connect(self.tracksrv_dbhost, self.tracksrv_dbuser, self.tracksrv_dbpass, self.tracksrv_dbname)
+
+        self._init_transponder()
+
+    def _init_transponder(self):
+        # ssr_beacon
+        # ssr_squawk
+        ssr_ident = False
+        self.callsign = 'TAM%04d' % random.randint(0, 9999)
+        self.icao24 = binascii.b2a_hex(os.urandom(3))
+
+        cursor = self.db.cursor()
+        cursor.execute("DELETE FROM transponder WHERE nem_id=%d" % self.nem_id)
+        sql = "INSERT INTO transponder (nem_id, ssr_ident, callsign, icao24) VALUES (%d, %s, '%s', '%s')" % (self.nem_id, ssr_ident, self.callsign, self.icao24)
+        cursor.execute(sql)
+
+        self.db.commit()
+        cursor.close()
+
     def get_position(self):
         # return self.gps_latitude, self.gps_longitude, self.gps_altitude
         return self.tracksrv_latitude, self.tracksrv_longitude, self.tracksrv_altitude
@@ -72,13 +91,9 @@ class CoreFeed(AdsbFeed):
         return 0
 
     def get_callsign(self):
-        if self.callsign is None:
-            self.callsign = 'TAM%04d' % random.randint(0, 9999)
         return self.callsign
 
     def get_icao24(self):
-        if self.icao24 is None:
-            self.icao24 = binascii.b2a_hex(os.urandom(3))
         return self.icao24
 
     def get_capabilities(self):
@@ -89,10 +104,6 @@ class CoreFeed(AdsbFeed):
 
     def gps_start(self):
         t1 = threading.Thread(target=self.gps_read, args=())
-        t1.start()
-
-    def emane_start(self):
-        t1 = threading.Thread(target=self.emane_read, args=())
         t1.start()
 
     def tracksrv_start(self):
@@ -145,11 +156,11 @@ class CoreFeed(AdsbFeed):
 
     def tracksrv_read(self):
 
-        db = MySQLdb.connect(self.tracksrv_dbhost, self.tracksrv_dbuser, self.tracksrv_dbpass, self.tracksrv_dbname)
-
         while True:
-            cursor = db.cursor()
-            query = "SELECT latitude, longitude, altitude, azimuth, magnitude, elevation FROM nem WHERE nem=%d" % self.nem_id
+            cursor = self.db.cursor()
+            query = "SELECT A.latitude, A.longitude, A.altitude, A.azimuth, A.magnitude, A.elevation, B.callsign, " \
+                    "B.icao24 FROM nem A, transponder B WHERE A.id=%d and A.id = B.nem_id" % self.nem_id
+
             cursor.execute(query)
 
             result = cursor.fetchone()
@@ -160,6 +171,8 @@ class CoreFeed(AdsbFeed):
             track = result[3]
             speed = result[4]
             climb = result[5]
+            callsign = result[6]
+            icao24 = result[7]
 
             self.tracksrv_latitude = lat
             self.tracksrv_longitude = lon
@@ -167,6 +180,8 @@ class CoreFeed(AdsbFeed):
             self.tracksrv_track = track
             self.tracksrv_speed = speed
             self.tracksrv_climb = climb
+            self.callsign = callsign
+            self.icao24 = icao24
 
             cursor.close()
 

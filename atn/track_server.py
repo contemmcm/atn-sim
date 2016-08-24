@@ -88,6 +88,7 @@ class TrackServer:
         sock.mcast_add(self.net_tracks, ip)  # Endereco de pistas
 
         while True:
+
             event = LocationEvent()
 
             data, sender_addr = sock.recvfrom(1024)
@@ -120,9 +121,29 @@ class TrackServer:
 
                     print (msg_num, nemid)
 
+                    #
                     # Update node's position using Emane API
+                    #
                     event.append(nemid, latitude=msg_lat, longitude=msg_lon, altitude=msg_alt * FT_TO_M,
                                  azimuth=msg_azm, magnitude=msg_vel * KT_TO_MPS, elevation=0.0)
+
+                    #
+                    # Update transponder's parameters using database shared memory
+                    #
+                    cursor = self.db.cursor()
+                    cursor.execute("SELECT callsign, performance_type FROM transponder WHERE nem_id=%d" % nemid)
+                    result = cursor.fetchone()
+
+                    db_callsign = result[0]
+                    db_perftype = result[1]
+
+                    if db_callsign[0] != msg_csg or db_perftype != msg_per:
+                        sql = "UPDATE transponder SET callsign='%s', performance_type='%s' WHERE nem_id=%d" % (msg_csg,
+                                                                                                               msg_per,
+                                                                                                               nemid)
+                        cursor.execute(sql)
+                        self.db.commit()
+                    cursor.close()
 
             service.publish(0, event)
 
@@ -131,20 +152,19 @@ class TrackServer:
             t0 = time.time()
             nodes = emane_utils.get_all_locations()
 
-            cursor = self.db.cursor()
             for n in nodes:
-
+                cursor = self.db.cursor()
                 sql = "UPDATE nem set latitude=%f, longitude=%f, altitude=%f, " \
                       "pitch=%f, roll=%f, yaw=%f, " \
                       "azimuth=%f, elevation=%f, magnitude=%f,  " \
-                      "last_update=now() WHERE nem=%d" % (n['latitude'], n['longitude'], n['altitude'],
+                      "last_update=now() WHERE id=%d" % (n['latitude'], n['longitude'], n['altitude'],
                                         n['pitch'], n['roll'], n['yaw'],
                                         n['azimuth'], n['elevation'], n['magnitude'],
                                         n['nem'])
                 cursor.execute(sql)
 
-            self.db.commit()
-            cursor.close()
+                self.db.commit()
+                cursor.close()
 
             dt = time.time() - t0
 
@@ -190,7 +210,7 @@ class TrackServer:
         logging.debug(sql)
 
         for n in range(0, len(node_names)):
-            sql = "INSERT INTO nem (nem, node_id, iface) VALUES (%d, (SELECT id FROM node WHERE name='%s'), '%s' )" % (nemids[n], node_names[n], node_devs[n])
+            sql = "INSERT INTO nem (id, node_id, iface) VALUES (%d, (SELECT id FROM node WHERE name='%s'), '%s' )" % (nemids[n], node_names[n], node_devs[n])
             cursor.execute(sql)
             logging.debug(sql)
 
@@ -211,7 +231,7 @@ class TrackServer:
             tracknumber = data[i][1]
 
             # node number
-            sql = "SELECT a.id, b.nem FROM node a, nem b WHERE a.name='%s' and a.id=b.node_id" % nodename
+            sql = "SELECT a.id, b.id FROM node a, nem b WHERE a.name='%s' and a.id=b.node_id" % nodename
             cursor = self.db.cursor()
             cursor.execute(sql)
             result = cursor.fetchone()
