@@ -119,7 +119,7 @@ class TrackServer:
                     else:
                         nemid = msg_num
 
-                    print (msg_num, nemid)
+                    print message
 
                     #
                     # Update node's position using Emane API
@@ -130,48 +130,77 @@ class TrackServer:
                     #
                     # Update transponder's parameters using database shared memory
                     #
-                    cursor = self.db.cursor()
-                    cursor.execute("SELECT callsign, performance_type FROM transponder WHERE nem_id=%d" % nemid)
-                    result = cursor.fetchone()
 
-                    db_callsign = result[0]
-                    db_perftype = result[1]
+                    try:
+                        cursor = self.db.cursor()
+                        cursor.execute("SELECT callsign, performance_type, ssr_squawk FROM transponder WHERE nem_id=%d" % nemid)
+                        result = cursor.fetchone()
 
-                    if db_callsign[0] != msg_csg or db_perftype != msg_per:
-                        sql = "UPDATE transponder SET callsign='%s', performance_type='%s' WHERE nem_id=%d" % (msg_csg,
-                                                                                                               msg_per,
-                                                                                                               nemid)
-                        cursor.execute(sql)
-                        self.db.commit()
-                    cursor.close()
+                        if result is None:
+                            print "SELECT callsign, performance_type, ssr_squawk FROM transponder WHERE nem_id=%d" % nemid
+                            continue
+
+                        db_callsign = result[0]
+                        db_perftype = result[1]
+                        db_squawk = result[2]
+
+                        if db_callsign[0] != msg_csg or db_perftype != msg_per or db_squawk != msg_ssr:
+                            sql = "UPDATE transponder SET callsign='%s', performance_type='%s', ssr_squawk='%s' " \
+                                  "WHERE nem_id=%d" % (msg_csg, msg_per, msg_ssr, nemid)
+
+                            cursor.execute(sql)
+                            self.db.commit()
+
+                        cursor.close()
+                    except MySQLdb.Error, e:
+                        try:
+                            print "listen(): MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+                        except IndexError:
+                            print "listen(): MySQL Error: %s" % str(e)
+
+                        # Reconnect
+                        self.db.close()
+
+                        self.db = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
 
             service.publish(0, event)
 
     def _update(self):
+
         while True:
             t0 = time.time()
             nodes = emane_utils.get_all_locations()
 
             for n in nodes:
                 cursor = self.db.cursor()
-                sql = "UPDATE nem set latitude=%f, longitude=%f, altitude=%f, " \
-                      "pitch=%f, roll=%f, yaw=%f, " \
-                      "azimuth=%f, elevation=%f, magnitude=%f,  " \
-                      "last_update=now() WHERE id=%d" % (n['latitude'], n['longitude'], n['altitude'],
-                                        n['pitch'], n['roll'], n['yaw'],
-                                        n['azimuth'], n['elevation'], n['magnitude'],
-                                        n['nem'])
-                cursor.execute(sql)
 
-                self.db.commit()
-                cursor.close()
+                try:
+                    sql = "UPDATE nem set latitude=%f, longitude=%f, altitude=%f, pitch=%f, roll=%f, yaw=%f, " \
+                          "azimuth=%f, elevation=%f, magnitude=%f,  last_update=now() WHERE id=%d" \
+                          % (n['latitude'], n['longitude'], n['altitude'], n['pitch'], n['roll'], n['yaw'],
+                             n['azimuth'], n['elevation'], n['magnitude'], n['nem'])
 
-            dt = time.time() - t0
+                    cursor.execute(sql)
 
-            # Logging
-            logging.info("Tables updated successfully. Processing time: %f s" % dt)
-            if dt > self.update_interval:
-                logging.warning("Position updates is taking longer than %f s" % self.update_interval)
+                    self.db.commit()
+
+                    cursor.close()
+
+                    dt = time.time() - t0
+
+                    # Logging
+                    logging.info("Tables updated successfully. Processing time: %f s" % dt)
+                    if dt > self.update_interval:
+                        logging.warning("Position updates is taking longer than %f s" % self.update_interval)
+                except MySQLdb.Error, e:
+
+                    print "_update(): MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+
+                    time.sleep(0.5)
+                    cursor.close()
+                    # self.db.close()
+                    # self.db = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
+                    continue
 
             dt = time.time() - t0
 
