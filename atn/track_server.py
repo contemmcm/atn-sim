@@ -13,6 +13,7 @@ from .network import mcast_socket
 
 from emanesh.events import EventService
 from emanesh.events import LocationEvent
+from collections import deque
 
 
 class TrackServer:
@@ -33,22 +34,31 @@ class TrackServer:
     def __init__(self, config="track_server.cfg"):
 
         self.db = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
+        self.db_process = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
+        self.db_update = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
 
         # Logging
         logging.basicConfig(filename=self.log_file, level=self.log_level, filemode='w',
                             format='%(asctime)s %(levelname)s: %(message)s')
 
+        self.logger = logging.getLogger("trackserver")
+
+        # Configuration file
         self.config = None
 
         if os.path.exists(config):
             self.config = ConfigParser.ConfigParser()
             self.config.read(config)
 
-
             # self.id = conf.get("General", "id")
 
+        self.service = EventService(('224.1.2.8', 45703, self.net_iface))
+        self.msg_queue = deque([])
+        self.nems = []
+
     def start(self):
-        logging.info("Initiating sever")
+
+        self.logger.info("Initiating server")
 
         self._init_nodes_table()
         self._init_nems_table()
@@ -56,27 +66,24 @@ class TrackServer:
 
         t1 = threading.Thread(target=self._update, args=())
         t2 = threading.Thread(target=self.listen, args=())
+        t3 = threading.Thread(target=self._process_queue, args=())
 
         t1.start()
         t2.start()
+        t3.start()
+
+        self.db.close()
 
     def stop(self):
         pass
 
     def listen(self):
-        FT_TO_M = 0.3048
-        KT_TO_MPS = 0.51444444444
-
-        service = EventService(('224.1.2.8', 45703, self.net_iface))
-
-        # This method is very slow. Future versions will implement distributed version of it.
-        self.nodes = []
 
         # Retrieving list of nodes
         nodes = emane_utils.get_all_locations()
 
         for n in nodes:
-            self.nodes.append(n["nem"])
+            self.nems.append(n["nem"])
 
         # IP address of incoming messages
         ip = ni.ifaddresses(self.net_iface)[2][0]['addr']
@@ -85,85 +92,96 @@ class TrackServer:
         print "Listen Addr.: %s:" % self.net_tracks
 
         sock = mcast_socket.McastSocket(local_port=1970, reuse=True)
-        sock.mcast_add(self.net_tracks, ip)  # Endereco de pistas
+        sock.mcast_add(self.net_tracks, ip)
 
         while True:
-
-            event = LocationEvent()
-
             data, sender_addr = sock.recvfrom(1024)
 
-            message = data.split("#")
+            self.msg_queue.append(data)
 
-            # ex: 101#114#1#7003#-1#4656.1#-16.48614#-47.947058#210.8#9.7#353.9#TAM6543#B737#21653.3006492
-            msg_ver = int(message[0])
-            msg_typ = int(message[1])
+    def _process_queue(self):
 
-            if msg_typ == 114:  # 114: message coming from newton.py
-                msg_num = int(message[2])  # node id
-                msg_ssr = message[3]
-                msg_spi = int(message[4])  # if spi > 0, SPI=ON, otherwise SPI=OFF
-                msg_alt = float(message[5])  # altitude (feet)
-                msg_lat = float(message[6])  # latitude (degrees)
-                msg_lon = float(message[7])  # longitude (degrees)
-                msg_vel = float(message[8])  # velocity (knots)
-                msg_cbr = float(message[9])  # climb rate (m/s)
-                msg_azm = float(message[10])  # azimuth (degrees)
-                msg_csg = message[11]  # callsign
-                msg_per = message[12]  # aircraft performance type
-                msg_tim = float(message[13])  # timestamp (see "hora de inicio")
+        while True:
+            if len(self.msg_queue) == 0:
+                time.sleep(0.5)
+                continue
+            else:
+                data = self.msg_queue.popleft()
+                self._process_msg(data)
 
-                if msg_num in self.nodes:
-                    if msg_num in self.track2nem:
-                        nemid = self.track2nem[msg_num]
-                    else:
-                        nemid = msg_num
+    def _process_msg(self, data):
 
-                    print message
+        FT_TO_M = 0.3048
+        KT_TO_MPS = 0.51444444444
 
-                    #
-                    # Update node's position using Emane API
-                    #
-                    event.append(nemid, latitude=msg_lat, longitude=msg_lon, altitude=msg_alt * FT_TO_M,
-                                 azimuth=msg_azm, magnitude=msg_vel * KT_TO_MPS, elevation=0.0)
+        message = data.split("#")
 
-                    #
-                    # Update transponder's parameters using database shared memory
-                    #
+        # ex: 101#114#1#7003#-1#4656.1#-16.48614#-47.947058#210.8#9.7#353.9#TAM6543#B737#21653.3006492
+        msg_ver = int(message[0])
+        msg_typ = int(message[1])
 
-                    try:
-                        cursor = self.db.cursor()
-                        cursor.execute("SELECT callsign, performance_type, ssr_squawk FROM transponder WHERE nem_id=%d" % nemid)
-                        result = cursor.fetchone()
+        if msg_typ != 114:
+            return
 
-                        if result is None:
-                            print "SELECT callsign, performance_type, ssr_squawk FROM transponder WHERE nem_id=%d" % nemid
-                            continue
+        msg_num = int(message[2])  # node id
+        msg_ssr = message[3]
+        msg_spi = int(message[4])  # if spi > 0, SPI=ON, otherwise SPI=OFF
+        msg_alt = float(message[5])  # altitude (feet)
+        msg_lat = float(message[6])  # latitude (degrees)
+        msg_lon = float(message[7])  # longitude (degrees)
+        msg_vel = float(message[8])  # velocity (knots)
+        msg_cbr = float(message[9])  # climb rate (m/s)
+        msg_azm = float(message[10])  # azimuth (degrees)
+        msg_csg = message[11]  # callsign
+        msg_per = message[12]  # aircraft performance type
+        msg_tim = float(message[13])  # timestamp (see "hora de inicio")
 
-                        db_callsign = result[0]
-                        db_perftype = result[1]
-                        db_squawk = result[2]
+        if msg_num in self.track2nem:
+            nemid = self.track2nem[msg_num]
+        else:
+            nemid = msg_num
 
-                        if db_callsign[0] != msg_csg or db_perftype != msg_per or db_squawk != msg_ssr:
-                            sql = "UPDATE transponder SET callsign='%s', performance_type='%s', ssr_squawk='%s' " \
-                                  "WHERE nem_id=%d" % (msg_csg, msg_per, msg_ssr, nemid)
+        if nemid not in self.nems:
+            return
 
-                            cursor.execute(sql)
-                            self.db.commit()
+        #
+        # Update node's position using Emane API
+        #
+        event = LocationEvent()
+        event.append(nemid, latitude=msg_lat, longitude=msg_lon, altitude=msg_alt * FT_TO_M, azimuth=msg_azm,
+                     magnitude=msg_vel * KT_TO_MPS, elevation=0.0)
 
-                        cursor.close()
-                    except MySQLdb.Error, e:
-                        try:
-                            print "listen(): MySQL Error [%d]: %s" % (e.args[0], e.args[1])
-                        except IndexError:
-                            print "listen(): MySQL Error: %s" % str(e)
+        #
+        # Update transponder's parameters using database shared memory
+        #
 
-                        # Reconnect
-                        self.db.close()
+        try:
+            cursor = self.db_process.cursor()
+            cursor.execute("SELECT callsign, performance_type, ssr_squawk FROM transponder WHERE nem_id=%d" % nemid)
+            result = cursor.fetchone()
 
-                        self.db = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
+            if result is None:
+                print "SELECT callsign, performance_type, ssr_squawk FROM transponder WHERE nem_id=%d" % nemid
+                return
 
-            service.publish(0, event)
+            db_callsign = result[0]
+            db_perftype = result[1]
+            db_squawk = result[2]
+
+            if db_callsign[0] != msg_csg or db_perftype != msg_per or db_squawk != msg_ssr:
+                sql = "UPDATE transponder SET callsign='%s', performance_type='%s', ssr_squawk='%s' " \
+                      "WHERE nem_id=%d" % (msg_csg, msg_per, msg_ssr, nemid)
+
+                cursor.execute(sql)
+                self.db_process.commit()
+
+            cursor.close()
+
+            self.service.publish(0, event)
+
+        except MySQLdb.Error, e:
+            print "listen(): MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            logging.warn("listen(): MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 
     def _update(self):
 
@@ -172,7 +190,7 @@ class TrackServer:
             nodes = emane_utils.get_all_locations()
 
             for n in nodes:
-                cursor = self.db.cursor()
+                cursor = self.db_update.cursor()
 
                 try:
                     sql = "UPDATE nem set latitude=%f, longitude=%f, altitude=%f, pitch=%f, roll=%f, yaw=%f, " \
@@ -182,29 +200,27 @@ class TrackServer:
 
                     cursor.execute(sql)
 
-                    self.db.commit()
+                    self.db_update.commit()
 
                     cursor.close()
 
                     dt = time.time() - t0
 
                     # Logging
-                    logging.info("Tables updated successfully. Processing time: %f s" % dt)
+                    self.logger.info("Tables updated successfully. Processing time: %f s" % dt)
                     if dt > self.update_interval:
-                        logging.warning("Position updates is taking longer than %f s" % self.update_interval)
+                        self.logger.warning("Position updates is taking longer than %f s" % self.update_interval)
                 except MySQLdb.Error, e:
 
-                    print "_update(): MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 
                     time.sleep(0.5)
-                    cursor.close()
-                    # self.db.close()
-                    # self.db = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
                     continue
 
             dt = time.time() - t0
 
-            time.sleep(self.update_interval - dt)
+            if self.update_interval - dt > 0:
+                time.sleep(self.update_interval - dt)
 
     def _init_nodes_table(self):
 
@@ -249,6 +265,7 @@ class TrackServer:
     def _init_mapings(self):
 
         self.track2nem = {}
+        self.nem2track = {}
 
         if self.config is None:
             return
@@ -264,10 +281,14 @@ class TrackServer:
             cursor = self.db.cursor()
             cursor.execute(sql)
             result = cursor.fetchone()
-            nodenumber = result[0]
-            nemid = result[1]
 
-            self.track2nem[tracknumber] = nemid
+            if result is not None:
+                nodenumber = result[0]
+                nemid = result[1]
+
+                self.track2nem[int(tracknumber)] = nemid
+                self.nem2track[nemid] = int(tracknumber)
+
 
 
 if __name__ == '__main__':

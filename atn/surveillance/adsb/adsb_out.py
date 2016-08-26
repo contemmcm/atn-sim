@@ -58,6 +58,7 @@ class AdsbOut:
         # Logging
         logging.basicConfig(filename=self.log_file, level=self.log_level, filemode='w',
                             format='%(asctime)s %(levelname)s: %(message)s')
+        self.logger = logging.getLogger("adsb.log")
 
     def start(self):
         print " > Initiating ADS-B Out transmission"
@@ -78,7 +79,7 @@ class AdsbOut:
             t0 = time.time()
             msg = self.generate_aircraft_id()
             self.broadcast(msg)
-            logging.debug("AIRCRAFT ID:\t%s" % msg)
+            self.logger.debug("AIRCRAFT ID:\t%s" % msg)
 
             dt = time.time() - t0
             time.sleep(rate - dt)
@@ -91,7 +92,7 @@ class AdsbOut:
             t0 = time.time()
             msg = self.generate_airborne_position()
             self.broadcast(msg)
-            logging.debug("AIR POSITION:\t%s" % msg)
+            self.logger.debug("AIR POSITION:\t%s" % msg)
 
             dt = time.time() - t0
             time.sleep(rate - dt)
@@ -104,7 +105,7 @@ class AdsbOut:
             t0 = time.time()
             msg = self.generate_airborne_velocity()
             self.broadcast(msg)
-            logging.debug("AIR VELOCITY:\t%s" % msg)
+            self.logger.debug("AIR VELOCITY:\t%s" % msg)
 
             dt = time.time() - t0
             time.sleep(rate - dt)
