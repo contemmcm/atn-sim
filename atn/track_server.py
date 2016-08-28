@@ -33,10 +33,6 @@ class TrackServer:
 
     def __init__(self, config="track_server.cfg"):
 
-        self.db = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
-        self.db_process = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
-        self.db_update = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
-
         # Logging
         logging.basicConfig(filename=self.log_file, level=self.log_level, filemode='w',
                             format='%(asctime)s %(levelname)s: %(message)s')
@@ -50,10 +46,39 @@ class TrackServer:
             self.config = ConfigParser.ConfigParser()
             self.config.read(config)
 
-            # self.id = conf.get("General", "id")
+            db_user = self.config.get("Database", "db_user")
+            db_pass = self.config.get("Database", "db_pass")
+            db_host = self.config.get("Database", "db_host")
+            db_name = self.config.get("Database", "db_name")
 
+            if db_user is not None:
+                self.db_user = db_user
+
+            if db_pass is not None:
+                self.db_pass = db_pass
+
+            if db_host is not None:
+                self.db_host = db_host
+
+            if db_name is not None:
+                self.db_name = db_name
+
+        # DB connection with general purposes
+        self.db = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
+
+        # DB connection specific for thread _process_msg()
+        self.db_process = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
+
+        # DB connection specific for thread _update()
+        self.db_update = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
+
+        # Emane service
         self.service = EventService(('224.1.2.8', 45703, self.net_iface))
+
+        # Queue of unprocessed messages from track generator
         self.msg_queue = deque([])
+
+        # List of NEMs available in the simulation
         self.nems = []
 
     def start(self):
@@ -88,15 +113,13 @@ class TrackServer:
         # IP address of incoming messages
         ip = ni.ifaddresses(self.net_iface)[2][0]['addr']
 
-        print "Control IP:   %s" % ip
-        print "Listen Addr.: %s:" % self.net_tracks
-
         sock = mcast_socket.McastSocket(local_port=1970, reuse=True)
         sock.mcast_add(self.net_tracks, ip)
 
         while True:
             data, sender_addr = sock.recvfrom(1024)
 
+            # Inserting received messages in the queue
             self.msg_queue.append(data)
 
     def _process_queue(self):
@@ -106,8 +129,7 @@ class TrackServer:
                 time.sleep(0.5)
                 continue
             else:
-                data = self.msg_queue.popleft()
-                self._process_msg(data)
+                self._process_msg(self.msg_queue.popleft())
 
     def _process_msg(self, data):
 
@@ -142,14 +164,17 @@ class TrackServer:
             nemid = msg_num
 
         if nemid not in self.nems:
+            # Current track does not exists in the simulation
             return
 
         #
-        # Update node's position using Emane API
+        # Update node's physical parameters using Emane API
         #
         event = LocationEvent()
         event.append(nemid, latitude=msg_lat, longitude=msg_lon, altitude=msg_alt * FT_TO_M, azimuth=msg_azm,
                      magnitude=msg_vel * KT_TO_MPS, elevation=0.0)
+
+        self.service.publish(0, event)
 
         #
         # Update transponder's parameters using database shared memory
@@ -176,8 +201,6 @@ class TrackServer:
                 self.db_process.commit()
 
             cursor.close()
-
-            self.service.publish(0, event)
 
         except MySQLdb.Error, e:
             print "listen(): MySQL Error [%d]: %s" % (e.args[0], e.args[1])
