@@ -2,11 +2,11 @@ import ipcalc
 import logging
 import math
 import netifaces as ni
+import random
+import sys
 import socket
 import threading
 import time
-import random
-
 
 import adsb_utils
 
@@ -29,9 +29,9 @@ class AdsbOut:
     MSG_SUBTYPE_1 = 1
     MSG_SUBTYPE_2 = 2
 
-    def __init__(self, feed=None):
+    def __init__(self, feed=None, nodename=None):
 
-        self.nodename = None
+        self.nodename = nodename
         self.nemid = None
 
         self.last_position_msg = "ODD"
@@ -45,6 +45,7 @@ class AdsbOut:
             # Initiate readings from gps device (latitude, longitude, altitude)
             # self.feed.gps_start()
             self.feed.tracksrv_start()
+
         else:
             self.feed = feed
 
@@ -114,7 +115,10 @@ class AdsbOut:
         pass
 
     def broadcast(self, message):
-        self.net_sock.sendto(message, (self.net_dest, self.net_port))
+        if self.nodename is None:
+            self.net_sock.sendto(message, (self.net_dest, self.net_port))
+        else:
+            self.net_sock.sendto(message + " " + self.nodename, (self.net_dest, self.net_port))
 
     def generate_aircraft_id(self):
 
@@ -389,5 +393,10 @@ class AdsbOut:
 if __name__ == '__main__':
 
     time.sleep(3)
-    transponder = AdsbOut()
+
+    name = None
+    if len(sys.argv) > 1:
+        name = sys.argv[1]
+
+    transponder = AdsbOut(nodename=name)
     transponder.start()

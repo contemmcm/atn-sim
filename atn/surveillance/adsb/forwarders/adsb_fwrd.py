@@ -6,7 +6,7 @@ class AdsbForwarder(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def forward(self, message, time_of_arrival):
+    def forward(self, message, time_of_arrival, tx_id, rx_id):
         raise NotImplementedError()
 
     @abstractmethod

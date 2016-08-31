@@ -46,22 +46,17 @@ class TrackServer:
             self.config = ConfigParser.ConfigParser()
             self.config.read(config)
 
-            db_user = self.config.get("Database", "db_user")
-            db_pass = self.config.get("Database", "db_pass")
-            db_host = self.config.get("Database", "db_host")
-            db_name = self.config.get("Database", "db_name")
+            if self.config.has_option("Database", "db_user"):
+                self.db_user = self.config.get("Database", "db_user")
 
-            if db_user is not None:
-                self.db_user = db_user
+            if self.config.has_option("Database", "db_pass"):
+                self.db_pass = self.config.get("Database", "db_pass")
 
-            if db_pass is not None:
-                self.db_pass = db_pass
+            if self.config.has_option("Database", "db_host"):
+                self.db_host = self.config.get("Database", "db_host")
 
-            if db_host is not None:
-                self.db_host = db_host
-
-            if db_name is not None:
-                self.db_name = db_name
+            if self.config.has_option("Database", "db_name"):
+                self.db_name = self.config.get("Database", "db_name")
 
         # DB connection with general purposes
         self.db = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
@@ -110,11 +105,16 @@ class TrackServer:
         for n in nodes:
             self.nems.append(n["nem"])
 
+        if len(nodes) == 0:
+            self.logger.error("Cannot read nodes' positions from Emane")
+
         # IP address of incoming messages
         ip = ni.ifaddresses(self.net_iface)[2][0]['addr']
 
         sock = mcast_socket.McastSocket(local_port=1970, reuse=True)
         sock.mcast_add(self.net_tracks, ip)
+
+        self.logger.info("Waiting for track messages on %s:%d" % (self.net_tracks, 1970))
 
         while True:
             data, sender_addr = sock.recvfrom(1024)
@@ -311,8 +311,6 @@ class TrackServer:
 
                 self.track2nem[int(tracknumber)] = nemid
                 self.nem2track[nemid] = int(tracknumber)
-
-
 
 if __name__ == '__main__':
     t = TrackServer()

@@ -2,6 +2,7 @@ import ConfigParser
 import logging
 import os
 import socket
+import threading
 import time
 
 from .forwarders import dump1090_fwrd
@@ -14,10 +15,15 @@ class AdsbIn:
 
     net_port = 30001
 
-    def __init__(self, config="adsbin.cfg"):
+    rec_msgs = []
+    max_rec_msgs = 5000
+
+    def __init__(self, config="adsbin.cfg", store_msgs=False):
         # Logging
         logging.basicConfig(filename=self.log_file, level=self.log_level, filemode='w',
                             format='%(asctime)s %(levelname)s: %(message)s')
+
+        self.store_rec_msgs = store_msgs
 
         # List of destination to which received messages will be forwarded to.
         self.forwarders = []
@@ -51,6 +57,10 @@ class AdsbIn:
                 #    self.forwarders.append(f)
 
     def start(self):
+        t1 = threading.Thread(target=self._start, args=())
+        t1.start()
+
+    def _start(self):
         print "  ,---.  ,------.   ,---.        ,-----.          ,--.         "
         print " /  O  \ |  .-.  \ '   .-',-----.|  |) /_         |  |,--,--,  "
         print "|  .-.  ||  |  \  :`.  `-.'-----'|  .-.  \        |  ||      \ "
@@ -71,23 +81,29 @@ class AdsbIn:
         while True:
 
             # Buffer size is 1024 bytes
-            message, addr = sock.recvfrom(1024)
+            message_raw, addr = sock.recvfrom(1024)
+            splits = message_raw.split()
+
+            if len(splits) > 1:
+                message = splits[0]
+                tx_node = splits[1]
+            else:
+                message = splits[0]
+                tx_node = None
 
             # Time of arrival
             toa = time.time()
 
-            # logging.debug("\t%s\t%s\t%f" % (addr, data, toa))
-
-            # Fix time of arrival for MLAT purposes
-            # if self.TOA_SIMULATED:
-            #    toa, x, y, z = self.calc_propagation_time(float(lat_tx), float(lon_tx), float(alt_tx))
-
             # Debugging info
-            #self.logger.info("Received message from " + str(addr) + " : " + data + " at t=%.20f" % toa)
+            # self.logger.info("Received message from " + str(addr) + " : " + data + " at t=%.20f" % toa)
+
+            if self.store_rec_msgs:
+                if len(self.rec_msgs) <= self.max_rec_msgs:
+                    self.store_msg(message)
 
             # Forward received ADS-B message to all configured forwarders
             for f in self.forwarders:
-                f.forward(message, toa)
+                f.forward(message, toa, tx_node, self.id)
 
             # Logging
             t1 = time.time()
@@ -100,6 +116,17 @@ class AdsbIn:
 
     def stop(self):
         pass
+
+    def store_msg(self, message):
+        print message
+        self.rec_msgs.append(message)
+
+    def retrieve_msg(self):
+        if len(self.rec_msgs) > 0:
+            return self.rec_msgs.pop()
+        else:
+            return None
+
 
 if __name__ == '__main__':
 
