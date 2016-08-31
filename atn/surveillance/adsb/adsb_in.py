@@ -118,7 +118,6 @@ class AdsbIn:
         pass
 
     def store_msg(self, message):
-        print message
         self.rec_msgs.append(message)
 
     def retrieve_msg(self):
