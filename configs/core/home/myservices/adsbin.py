@@ -54,6 +54,12 @@ class AdsbIn(CoreService):
             cfg += "type = dump1090\n"
             cfg += "server = localhost\n"
             cfg += "port = 30001\n\n"
+            cfg += ";[dst02]\n"
+            cfg += ";type = database\n"
+            cfg += ";server = 172.17.255.254\n"
+            cfg += ";dbname = atn_sim\n"
+            cfg += ";dbuser = atn_sim\n"
+            cfg += ";dbpass = atn_sim\n\n"
 
         return cfg
 

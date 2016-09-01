@@ -6,6 +6,7 @@ import threading
 import time
 
 from .forwarders import dump1090_fwrd
+from .forwarders import database_fwrd
 
 
 class AdsbIn:
@@ -49,9 +50,9 @@ class AdsbIn:
                     f = dump1090_fwrd.Dump1090Forwarder(items=d)
                     f.set_timeout(0.5)
                     self.forwarders.append(f)
-                #elif d["type"] == "mysql":
-                #    f = MysqlForwarder(verbose=verbose, items=d, sensor_id=self.id_sensor)
-                #    self.forwarders.append(f)
+                elif d["type"] == "database":
+                    f = database_fwrd.DatabseForwarder(sensor_id=self.id, items=d)
+                    self.forwarders.append(f)
                 #elif d["type"] == "asterix":
                 #    f = AsterixForwarder(verbose=verbose, items=d)
                 #    self.forwarders.append(f)

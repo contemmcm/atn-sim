@@ -1,5 +1,6 @@
 import binascii
 import os
+import socket
 import threading
 import time
 
@@ -9,7 +10,8 @@ import atn.surveillance.adsb.adsb_utils as adsb_utils
 from ..adsb_in import AdsbIn
 from ..adsb_out import AdsbOut
 
-class Spoofer:
+
+class AdsbGhost:
 
     delay = 30
 
@@ -19,8 +21,9 @@ class Spoofer:
     icao24_spoofed = []
 
     def __init__(self):
+        self.name = socket.gethostname()
         self.adsbin = AdsbIn(store_msgs=True)
-        self.adsbout = AdsbOut()
+        self.adsbout = AdsbOut(nodename=self.name)
 
     def start(self):
         self.adsbin.start()
@@ -56,9 +59,11 @@ class Spoofer:
         msg_icao24 = adsb_decoder.get_icao_addr(message)
         new_icao24 = self.icao24_table[msg_icao24]
 
+        # Replace old ICAO address
         new_message_hex = message[0:2] + new_icao24 + message[8:22]
         new_message_bin = bin(int(new_message_hex, 16))[2:].zfill(24)
 
+        # Re-calculate the CRC
         crc = adsb_utils.calc_crc(new_message_bin)
         crc_hex = hex(int(crc, 2)).rstrip("L").lstrip("0x")
 
@@ -72,7 +77,7 @@ def adsb_replay(message, delay, dev):
 
 
 def main():
-    tx = Spoofer()
+    tx = AdsbGhost()
     tx.start()
 
 if __name__ == '__main__':
