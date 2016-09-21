@@ -9,8 +9,8 @@ node n1 {
 	!
     }
     canvas c1
-    iconcoords {911.0 31.0}
-    labelcoords {911.0 63.0}
+    iconcoords {941.0 58.0}
+    labelcoords {941.0 90.0}
     interface-peer {eth0 n6}
     custom-config {
 	custom-config-id service:TrackS
@@ -96,7 +96,7 @@ node n1 {
 	
 	}
     }
-    services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut Pilot}
+    services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut}
 }
 
 node n3 {
@@ -111,8 +111,8 @@ node n3 {
 	!
     }
     canvas c1
-    iconcoords {284.0 216.0}
-    labelcoords {284.0 248.0}
+    iconcoords {282.0 214.0}
+    labelcoords {282.0 246.0}
     interface-peer {eth0 n6}
     services {DefaultRoute}
 }
@@ -131,34 +131,11 @@ node n4 {
 	!
     }
     canvas c1
-    iconcoords {487.0 136.0}
-    labelcoords {487.0 168.0}
+    iconcoords {485.0 134.0}
+    labelcoords {485.0 166.0}
     interface-peer {eth0 n6}
     interface-peer {eth1 n5}
-    services {zebra OSPFv3MDR vtysh IPForward GPSd AdsbIn}
-    custom-config {
-	custom-config-id service:AdsbIn
-	custom-command AdsbIn
-	config {
-	files=('adsbin.cfg', 'adsbin.sh', )
-	starttime=5
-	}
-    }
-    custom-config {
-	custom-config-id service:AdsbIn:adsbin.cfg
-	custom-command adsbin.cfg
-	config {
-	[General]
-	id = n4
-	destinations = Dump1090
-	
-	[Dump1090]
-	type = dump1090
-	server = 10.0.2.10
-	port = 30001
-	
-	}
-    }
+    services {zebra OSPFv3MDR vtysh IPForward GPSd Dump1090 AdsbIn}
 }
 
 node n5 {
@@ -242,6 +219,7 @@ node n6 {
     interface-peer {e2 n3}
     interface-peer {e3 n4}
     interface-peer {e1 n2}
+    interface-peer {e4 n8}
 }
 
 node n7 {
@@ -273,10 +251,28 @@ node n2 {
 	!
     }
     canvas c1
-    iconcoords {431.0 429.0}
-    labelcoords {431.0 461.0}
+    iconcoords {435.0 509.0}
+    labelcoords {435.0 541.0}
     interface-peer {eth0 n6}
-    services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut Pilot}
+    services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut}
+}
+
+node n8 {
+    type router
+    model host
+    network-config {
+	hostname n8
+	!
+	interface eth0
+	 ip address 10.0.0.10/24
+	 ipv6 address 2001:0::10/128
+	!
+    }
+    canvas c1
+    iconcoords {100.0 691.0}
+    labelcoords {100.0 723.0}
+    services {DefaultRoute SSH TrackServer}
+    interface-peer {eth0 n6}
 }
 
 link l1 {
@@ -303,6 +299,10 @@ link l6 {
 
 link l2 {
     nodes {n6 n2}
+}
+
+link l7 {
+    nodes {n6 n8}
 }
 
 canvas c1 {

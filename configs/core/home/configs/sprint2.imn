@@ -9,8 +9,8 @@ node n1 {
 	!
     }
     canvas c1
-    iconcoords {909.0 31.0}
-    labelcoords {909.0 63.0}
+    iconcoords {833.0 35.0}
+    labelcoords {833.0 67.0}
     interface-peer {eth0 n6}
     custom-config {
 	custom-config-id service:PTracks
@@ -115,7 +115,7 @@ node n1 {
 	
 	}
     }
-    services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut Pilot}
+    services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut}
 }
 
 node n2 {
@@ -129,8 +129,8 @@ node n2 {
 	!
     }
     canvas c1
-    iconcoords {430.0 425.0}
-    labelcoords {430.0 457.0}
+    iconcoords {418.0 306.0}
+    labelcoords {418.0 338.0}
     interface-peer {eth0 n6}
     custom-config {
 	custom-config-id service:PTracks
@@ -224,7 +224,7 @@ node n2 {
 	
 	}
     }
-    services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut Pilot}
+    services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut}
 }
 
 node n3 {
@@ -238,17 +238,10 @@ node n3 {
 	!
     }
     canvas c1
-    iconcoords {281.0 207.0}
-    labelcoords {281.0 239.0}
+    iconcoords {279.0 205.0}
+    labelcoords {279.0 237.0}
     interface-peer {eth0 n6}
-    services {DefaultRoute AdsbIn Spoofer}
-    custom-config {
-	custom-config-id service:AdsbIn
-	custom-command AdsbIn
-	config {
-	starttime=5
-	}
-    }
+    services {DefaultRoute AdsbReplay}
 }
 
 node n4 {
@@ -265,34 +258,11 @@ node n4 {
 	!
     }
     canvas c1
-    iconcoords {532.0 197.0}
-    labelcoords {532.0 229.0}
+    iconcoords {530.0 195.0}
+    labelcoords {530.0 227.0}
     interface-peer {eth0 n6}
     interface-peer {eth1 n5}
-    services {zebra OSPFv3MDR vtysh IPForward GPSd AdsbIn}
-    custom-config {
-	custom-config-id service:AdsbIn
-	custom-command AdsbIn
-	config {
-	files=('adsbin.cfg', 'adsbin.sh', )
-	starttime=5
-	}
-    }
-    custom-config {
-	custom-config-id service:AdsbIn:adsbin.cfg
-	custom-command adsbin.cfg
-	config {
-	[General]
-	id = n4
-	destinations = Dump1090
-	
-	[Dump1090]
-	type = dump1090
-	server = 10.0.2.10
-	port = 30001
-	
-	}
-    }
+    services {zebra OSPFv3MDR vtysh IPForward GPSd Dump1090 AdsbIn}
 }
 
 node n5 {
@@ -377,6 +347,7 @@ node n6 {
     interface-peer {e2 n3}
     interface-peer {e3 n4}
     interface-peer {e4 n8}
+    interface-peer {e5 n9}
 }
 
 node n7 {
@@ -408,10 +379,10 @@ node n8 {
 	!
     }
     canvas c1
-    iconcoords {372.0 281.0}
-    labelcoords {372.0 313.0}
+    iconcoords {370.0 279.0}
+    labelcoords {370.0 311.0}
     interface-peer {eth0 n6}
-    services {DefaultRoute Flooder}
+    services {DefaultRoute}
     custom-config {
 	custom-config-id service:Flooder
 	custom-command Flooder
@@ -434,6 +405,24 @@ node n8 {
 	
 	}
     }
+}
+
+node n9 {
+    type router
+    model host
+    network-config {
+	hostname n9
+	!
+	interface eth0
+	 ip address 10.0.0.10/24
+	 ipv6 address 2001:0::10/128
+	!
+    }
+    canvas c1
+    iconcoords {88.0 670.0}
+    labelcoords {88.0 702.0}
+    interface-peer {eth0 n6}
+    services {DefaultRoute SSH TrackServer}
 }
 
 link l1 {
@@ -464,6 +453,10 @@ link l6 {
 
 link l7 {
     nodes {n6 n8}
+}
+
+link l8 {
+    nodes {n6 n9}
 }
 
 canvas c1 {
