@@ -10,6 +10,8 @@ from scipy import linalg
 import atn.surveillance.adsb.decoder as decoder
 import atn.geo_utils as geoutils
 
+from ..forwarders import dump1090_fwrd
+from ..forwarders import database_fwrd
 
 class MlatServer:
 
@@ -62,10 +64,14 @@ class MlatServer:
                 for i in items:
                     d[i[0]] = i[1]
 
-                # TODO
-                # f = forwarder_factory.create(d["type"], self.name, d)
+                if d["type"] == "dump1090":
+                    f = dump1090_fwrd.Dump1090Forwarder(items=d)
+                    f.set_timeout(0.5)
+                    self.forwarders.append(f)
 
-                # self.forwarders.append(f)
+                elif d["type"] == "database":
+                    f = database_fwrd.DatabseForwarder(sensor_id=self.name, items=d)
+                    self.forwarders.append(f)
 
         # Connecting to database in order to read unprocessed messages
         self.db = MySQLdb.connect(self.dbhost, self.dbuser, self.dbpass, self.dbname)
@@ -192,13 +198,6 @@ class MlatServer:
             ypos[i] = self.sensors[sensor_id[i]].ypos
             zpos[i] = self.sensors[sensor_id[i]].altitude
 
-            # Distance of object from receiver
-            # tx_xpos[i] = float(row[4])
-            # tx_ypos[i] = float(row[5])
-            # tx_zpos[i] = float(row[6])
-
-            # print (tx_xpos[i] + xpos[i], tx_ypos[i] + ypos[i])
-
             i += 1
 
         # Do not process it with insufficient data
@@ -216,14 +215,11 @@ class MlatServer:
         # Determining source of transmission using mulilateration
         _x, _y = self.get_estimated_xy(xpos, ypos, zpos, toa)
 
-        # Source of transmission (debug)
-        #_x, _y = (tx_xpos[0] + xpos[0], tx_ypos[0] + ypos[0])
-
         # Determining reliability of message
         if x is not None and y is not None and _x is not None and _y is not None:
 
             # 2D distance between reported and estimated positions
-            distance = math.sqrt( (x - _x)**2 + (y - _y)**2 )
+            distance = math.sqrt((x - _x)**2 + (y - _y)**2)
 
             if distance <= 1000:
                 print "'%s'\t%d\t%s[PASS]%s" % (message, distance, bcolors.OKBLUE, bcolors.ENDC)
@@ -278,7 +274,7 @@ class MlatServer:
 
     def get_estimated_xy(self, xpos, ypos, zpos, toa):
 
-        # Number of measuremens
+        # Number of measurements
         nmeas = len(toa)
 
         # Sorting by time of arrival, where the last sensor to receive is always the reference
