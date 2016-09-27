@@ -18,17 +18,23 @@ emane:
 	./configure                                         ;\
 	make deb
 
-all: dump1090 core emane
+ptracks:
+	git clone https://github.com/contemmcm/ptracks.git
 
-install: dump1090 core emane
+all: dump1090 core emane ptracks
+
+install: dump1090 core emane ptracks
 	# CORE
-	cd core ; sudo make install
+	cd core ; sudo make install; cd ..
 
 	# EMANE
-	cd emane/.debbuild ; sudo dpkg -i *.deb
+	cd emane/.debbuild ; sudo dpkg -i *.deb ; cd ../..
 
 	# DUMP 1090
 	sudo cp -r dump1090 /opt
+
+	# PTRACKS
+	cd ptracks; sudo ./install ; cd ..
 
 	# ATN-SIM
 
@@ -45,8 +51,12 @@ clean:
 	rm -rf core
 	rm -rf emane
 	rm -rf dump1090
+	rm -rf ptracks
 
 uninstall:
 	sudo rm /opt/atn-sim
 	sudo rm /usr/local/lib/python2.7/dist-packages/atn
 	sudo rm -rf /opt/dump1090
+	sudo rm /usr/local/lib/python2.7/dist-packages/ptracks
+	sudo rm -rf /etc/ptracks
+	sudo rm /etc/init.d/ptracks
