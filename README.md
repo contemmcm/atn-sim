@@ -44,7 +44,11 @@ Please, refer to https://github.com/contemmcm/ptracks for more information on th
 sudo apt-get install git ssh iperf tshark tcpdump nmap traceroute gpsd \
     gpsd-clients ircd-irc2 xchat python-geopy python-numpy python-pip \
     python-mysqldb python-mysql.connector mysql-server python-matplotlib \
-    python-scipy python-netifaces libnl1
+    python-scipy python-netifaces python-ipcalc libnl1
+```
+
+```
+sudo pip install gps3
 ```
 
 #### Download and install
