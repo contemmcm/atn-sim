@@ -44,13 +44,19 @@ Please, refer to https://github.com/contemmcm/ptracks for more information on th
 sudo apt-get install git ssh iperf tshark tcpdump nmap traceroute gpsd \
     gpsd-clients ircd-irc2 xchat python-geopy python-numpy python-pip \
     python-mysqldb python-mysql.connector mysql-server python-matplotlib \
-    python-scipy python-netifaces python-ipcalc libnl1
+    python-scipy python-netifaces python-ipcalc libnl1 quagga
 ```
 
 ```
 sudo pip install gps3
 ```
 
+For wireless routing, install the Mobile Routing variant of Quagga (`quagga-mr`):
+
+```
+wget http://downloads.pf.itd.nrl.navy.mil/ospf-manet/quagga-0.99.21mr2.2/quagga-mr_0.99.21mr2.2_amd64.deb
+sudo dpkg -i quagga-mr_0.99.21mr2.2_amd64.deb
+```
 #### Download and install
 
 Choose an appropriate directory and download the code from GitHub:
