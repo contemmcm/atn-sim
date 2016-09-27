@@ -44,7 +44,7 @@ Please, refer to https://github.com/contemmcm/ptracks for more information on th
 sudo apt-get install git ssh iperf tshark tcpdump nmap traceroute gpsd \
     gpsd-clients ircd-irc2 xchat python-geopy python-numpy python-pip \
     python-mysqldb python-mysql.connector mysql-server python-matplotlib \
-    python-scipy libnl1
+    python-scipy python-netifaces libnl1
 ```
 
 #### Download and install
@@ -130,8 +130,8 @@ core-gui
 
 Then, open an scenario file (e.g., sprint1.imn) and start the simulation by pressing the green arrow on the left menu.
 
-Finally, initialize the ptracks:
+Finally, initialize the ptracks, choosing a proper exercise (e.g., COREDEMO):
 
 ```
-sudo service ptracks start
+sudo service ptracks start COREDEMO
 ```
