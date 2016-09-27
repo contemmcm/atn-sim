@@ -41,8 +41,97 @@ Please, refer to https://github.com/contemmcm/ptracks for more information on th
  
 ##### General 
 ```
-sudo apt-get install git subversion ssh iperf tshark tcpdump nmap traceroute \
-    gpsd gpsd-clients ircd-irc2 xchat python-geopy python-numpy python-pip \
+sudo apt-get install git ssh iperf tshark tcpdump nmap traceroute gpsd \
+    gpsd-clients ircd-irc2 xchat python-geopy python-numpy python-pip \
     python-mysqldb python-mysql.connector mysql-server python-matplotlib \
     python-scipy libnl1
+```
+
+#### Download and install
+
+Choose an appropriate directory and download the code from GitHub:
+ 
+```
+git clone https://github.com/contemmcm/atn-sim.git
+```
+
+Then, download and compile the necessary projects. Make sure to have installed the requirements described previously.
+
+```
+cd atn-sim
+make all
+sudo make install
+```
+
+##### Database configuration
+
+First, you need to allow your MySQL server from other networks.
+
+In Ubuntu 14.04, you can do so by editing the file `/etc/mysql/my.cnf`, changing the parameter bind-address to 0.0.0.0:
+
+```
+bind-address            = 0.0.0.0
+```
+
+Then, restart the MySQL server:
+
+```
+sudo service mysql restart
+```
+
+At this point, change to the `atn-sim/configs/db` directory and login  to MySQL server as super user. If you have defined a password for root user, add the option `-p` to the end of the following command.
+```
+mysql -u root
+```
+
+This would open a MySQL console.
+
+```
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is xx
+Server version: 5.5.52-0ubuntu0.14.04.1 (Ubuntu)
+
+Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> 
+```
+
+Execute the following on the MySQL console:
+
+```
+create database atn_sim;
+grant all privileges on atn_sim.* to atn_sim@'%' identified by 'atn_sim';
+use atn_sim
+source atn_sim.sql
+exit
+```
+
+You are now ready to start the simulation.
+
+## Quick Start
+
+Initialize CORE:
+
+```
+sudo service core-daemon start
+```
+
+Open the graphical user interface for CORE by executing:
+
+```
+core-gui
+```
+
+Then, open an scenario file (e.g., sprint1.imn) and start the simulation by pressing the green arrow on the left menu.
+
+Finally, initialize the ptracks:
+
+```
+sudo service ptracks start
 ```
