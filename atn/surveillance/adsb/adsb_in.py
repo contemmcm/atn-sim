@@ -5,9 +5,9 @@ import socket
 import threading
 import time
 
-from .forwarders import dump1090_fwrd
-from .forwarders import database_fwrd
-
+from .forwarders.dump1090_fwrd import Dump1090Forwarder
+from .forwarders.database_fwrd import DatabseForwarder
+from .forwarders.asterix_fwrd import AsterixForwarder
 
 class AdsbIn:
 
@@ -47,15 +47,15 @@ class AdsbIn:
                     d[i[0]] = i[1]
 
                 if d["type"] == "dump1090":
-                    f = dump1090_fwrd.Dump1090Forwarder(items=d)
+                    f = Dump1090Forwarder(items=d)
                     f.set_timeout(0.5)
                     self.forwarders.append(f)
                 elif d["type"] == "database":
-                    f = database_fwrd.DatabseForwarder(sensor_id=self.id, items=d)
+                    f = DatabseForwarder(sensor_id=self.id, items=d)
                     self.forwarders.append(f)
-                #elif d["type"] == "asterix":
-                #    f = AsterixForwarder(verbose=verbose, items=d)
-                #    self.forwarders.append(f)
+                elif d["type"] == "asterix":
+                    f = AsterixForwarder(items=d)
+                    self.forwarders.append(f)
 
     def start(self):
         t1 = threading.Thread(target=self._start, args=())
