@@ -7,6 +7,9 @@ from . import asterix_utils
 import threading
 import socket
 import binascii
+import time
+
+from .ground_station import GroundStation
 
 __author__ = "Ivan Matias"
 __date__ = "2016/04"
@@ -22,14 +25,20 @@ class AdsBAsterixEncode(object):
     # BUFFER_SIZE [int]: Maximum size of the data buffer.
     BUFFER_SIZE = 1024
 
-    def __init__(self):
+    def __init__(self, sic):
         """The constructor.
 
+            Args:
+                sic (int): The system code identification of surveillance sensor.
+
         """
-        # port [int]: Data receiving port.
+        ## ground_station [object]: The CNS/ATM Ground Station
+        self.ground_station = GroundStation(sic)
+
+        ## port [int]: Data receiving port.
         self.port = 0
 
-        # net [string]: IPv4 address.
+        ## net [string]: IPv4 address.
         self.net = '127.0.0.1'
 
     def create_socket(self, port):
@@ -64,6 +73,28 @@ class AdsBAsterixEncode(object):
         # queue (Queue.Queue): The queue to exchange data.
         self.queue = queue
 
+    def service_message(self):
+        """
+        Sends the service status message of the CNS/ATM Ground Station.
+
+        """
+        # Gets the message delivery time
+        time_utc = time.gmtime(time.time())
+        # Converts for second:
+        time_of_day = int(time_utc.tm_hour) * 3600 + int(time_utc.tm_min) * 60 + int(time_utc.tm_sec)
+
+        # Gets the ASTERIX record for Ground Station
+        asterix_record = self.ground_station.to_asterix_record(GroundStation.SERVICE_STATUS_MESSAGE, time_of_day)
+
+        if asterix_record is not None:
+            # Encoding data to Asterix format
+            data_bin = asterix_utils.encode(asterix_record)
+
+            # print ("%x" % data_bin)
+            msg = hex(data_bin).rstrip("L").lstrip("0x")
+            self.sock.sendto(binascii.unhexlify(msg), (self.net, self.port))
+            print msg
+
     def encode_data(self):
         """Receiving and encoding the ADS-B data in ASTERIX CAT 21.
 
@@ -84,10 +115,13 @@ class AdsBAsterixEncode(object):
                         self.sock.sendto(binascii.unhexlify(msg), (self.net, self.port))
                         print msg
 
-    def start_thread(self):
+    def start_thread(self, periodicity=2.0):
         """Starts processing.
 
         """
         encode_thread = threading.Thread(target=self.encode_data, args=())
         encode_thread.start()
+
+        service_message_thread = threading.Timer(periodicity, self.service_message)
+        service_message_thread.start()
 

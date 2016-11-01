@@ -84,7 +84,7 @@ if '__main__' == __name__:
     decoder.start_thread()
 
     # Create an object to encode ASTERIX
-    encoder = AdsBAsterixEncode()
+    encoder = AdsBAsterixEncode(sic)
     encoder.create_socket(tx_port)
     encoder.set_net(net)
     encoder.set_queue(queue)
