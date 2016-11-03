@@ -73,6 +73,20 @@ class AdsBAsterixEncode(object):
         # queue (Queue.Queue): The queue to exchange data.
         self.queue = queue
 
+    def send_message(self, asterix_record):
+        """Sends message to the net
+
+        Args:
+            asterix_record (dictionary): A ASTERIX record in a dicitionary
+
+        """
+        # Encoding data to ASETRIX format
+        data_bin = asterix_utils.encode(asterix_record)
+        # print ("%x" % data_bin)
+        msg = hex(data_bin).rstrip("L").lstrip("0x")
+        self.sock.sendto(binascii.unhexlify(msg), (self.net, self.port))
+        print msg
+
     def service_message(self):
         """
         Sends the service status message of the CNS/ATM Ground Station.
@@ -87,13 +101,7 @@ class AdsBAsterixEncode(object):
         asterix_record = self.ground_station.to_asterix_record(GroundStation.SERVICE_STATUS_MESSAGE, time_of_day)
 
         if asterix_record is not None:
-            # Encoding data to Asterix format
-            data_bin = asterix_utils.encode(asterix_record)
-
-            # print ("%x" % data_bin)
-            msg = hex(data_bin).rstrip("L").lstrip("0x")
-            self.sock.sendto(binascii.unhexlify(msg), (self.net, self.port))
-            print msg
+            self.send_message(asterix_record)
 
     def encode_data(self):
         """Receiving and encoding the ADS-B data in ASTERIX CAT 21.
@@ -106,14 +114,7 @@ class AdsBAsterixEncode(object):
                     asterix_record = aircraft_table[k].to_asterix_record(k)
                     #print asterix_record
                     if asterix_record is not None:
-
-                        # Encoding data to Asterix format
-                        data_bin = asterix_utils.encode(asterix_record)
-
-                        # print ("%x" % data_bin)
-                        msg = hex(data_bin).rstrip("L").lstrip("0x")
-                        self.sock.sendto(binascii.unhexlify(msg), (self.net, self.port))
-                        print msg
+                        self.send_message(asterix_record)
 
     def start_thread(self, periodicity=2.0):
         """Starts processing.
