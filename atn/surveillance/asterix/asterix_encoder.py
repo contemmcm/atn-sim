@@ -41,6 +41,9 @@ class AdsBAsterixEncode(object):
         ## net [string]: IPv4 address.
         self.net = '127.0.0.1'
 
+        ## delay [number]: Time in seconds for sending the service message
+        self.time_service_message = 6
+
     def create_socket(self, port):
         """Creates the socket for receiving the ADS-B messages.
 
@@ -103,6 +106,8 @@ class AdsBAsterixEncode(object):
         if asterix_record is not None:
             self.send_message(asterix_record)
 
+        time.sleep(self.time_service_message)
+
     def encode_data(self):
         """Receiving and encoding the ADS-B data in ASTERIX CAT 21.
 
@@ -116,13 +121,15 @@ class AdsBAsterixEncode(object):
                     if asterix_record is not None:
                         self.send_message(asterix_record)
 
-    def start_thread(self, periodicity=2.0):
+    def start_thread(self, time_service_message=6):
         """Starts processing.
 
         """
         encode_thread = threading.Thread(target=self.encode_data, args=())
         encode_thread.start()
 
-        service_message_thread = threading.Timer(periodicity, self.service_message)
+        self.time_service_message = time_service_message
+
+        service_message_thread = threading.Thread(target=self.service_message, args=())
         service_message_thread.start()
 
