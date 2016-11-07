@@ -95,18 +95,20 @@ class AdsBAsterixEncode(object):
         Sends the service status message of the CNS/ATM Ground Station.
 
         """
-        # Gets the message delivery time
-        time_utc = time.gmtime(time.time()+1)
-        # Converts for second:
-        time_of_day = int(time_utc.tm_hour) * 3600 + int(time_utc.tm_min) * 60 + int(time_utc.tm_sec)
 
-        # Gets the ASTERIX record for Ground Station
-        asterix_record = self.ground_station.to_asterix_record(GroundStation.SERVICE_STATUS_MESSAGE, time_of_day)
+        while True:
+            # Gets the message delivery time
+            time_utc = time.gmtime(time.time()+1)
+            # Converts for second:
+            time_of_day = int(time_utc.tm_hour) * 3600 + int(time_utc.tm_min) * 60 + int(time_utc.tm_sec)
 
-        if asterix_record is not None:
-            self.send_message(asterix_record)
+            # Gets the ASTERIX record for Ground Station
+            asterix_record = self.ground_station.to_asterix_record(GroundStation.SERVICE_STATUS_MESSAGE, time_of_day)
 
-        time.sleep(self.time_service_message)
+            if asterix_record is not None:
+                self.send_message(asterix_record)
+
+            time.sleep(self.time_service_message)
 
     def encode_data(self):
         """Receiving and encoding the ADS-B data in ASTERIX CAT 21.
@@ -115,13 +117,14 @@ class AdsBAsterixEncode(object):
         while True:
             if not self.queue.empty():
                 aircraft_table = self.queue.get()
-                for k, v in aircraft_table.iteritems():
+                items = aircraft_table.iteritems()
+                for k, v in items:
                     asterix_record = aircraft_table[k].to_asterix_record(k)
                     #print asterix_record
                     if asterix_record is not None:
                         self.send_message(asterix_record)
 
-    def start_thread(self, time_service_message=6):
+    def start_thread(self, time_service_message=2):
         """Starts processing.
 
         """

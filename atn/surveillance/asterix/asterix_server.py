@@ -88,4 +88,4 @@ if '__main__' == __name__:
     encoder.create_socket(tx_port)
     encoder.set_net(net)
     encoder.set_queue(queue)
-    encoder.start_thread(periodicity=1.0)
+    encoder.start_thread()

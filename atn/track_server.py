@@ -213,6 +213,9 @@ class TrackServer:
         while True:
             t0 = time.time()
 
+            # Trecho com problemas
+            self.logger.debug("Requesting locations from EMANE")
+
             nodes = emane_utils.get_all_locations()
 
             self.logger.debug("EMANE responded in %f secs " % (time.time() - t0) )
@@ -235,7 +238,7 @@ class TrackServer:
                     dt = time.time() - t0
 
                     # Logging
-                    self.logger.info("Tables updated successfully. Processing time: %f s" % dt)
+                    # self.logger.info("Tables updated successfully. Processing time: %f s" % dt)
                     if dt > self.update_interval:
                         self.logger.warning("Position updates is taking longer than %f s" % self.update_interval)
                 except MySQLdb.Error, e:
