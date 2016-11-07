@@ -1,9 +1,10 @@
-import threading
 import binascii
+import logging
 import MySQLdb
 import os
 import random
 import time
+import threading
 
 from gps3 import gps3
 
@@ -14,6 +15,9 @@ from atn import emane_utils
 
 
 class CoreFeed(AdsbFeed):
+
+    log_file = "core_feed.log"
+    log_level = logging.DEBUG
 
     gps_latitude = 0
     gps_longitude = 0
@@ -51,6 +55,12 @@ class CoreFeed(AdsbFeed):
     icao24 = None
 
     def __init__(self):
+        # Logging
+        logging.basicConfig(filename=self.log_file, level=self.log_level, filemode='w',
+                            format='%(asctime)s %(levelname)s: %(message)s')
+
+        self.logger = logging.getLogger("coreemu_feed")
+
         self.session_id = core_utils.get_session_id()
         self.node_name = core_utils.get_node_name()
         self.nem_id = core_utils.get_nem_id(node_name=self.node_name, session_id=self.session_id)
@@ -157,32 +167,37 @@ class CoreFeed(AdsbFeed):
     def tracksrv_read(self):
 
         while True:
+
             cursor = self.db.cursor()
-            query = "SELECT A.latitude, A.longitude, A.altitude, A.azimuth, A.magnitude, A.elevation, B.callsign, " \
-                    "B.icao24 FROM nem A, transponder B WHERE A.id=%d and A.id = B.nem_id" % self.nem_id
+            query = "SELECT A.latitude, A.longitude, A.altitude, A.azimuth, A.magnitude, A.elevation, B.callsign," \
+                    " B.icao24 FROM nem A, transponder B WHERE A.id=%d and A.id = B.nem_id" % self.nem_id
+            try:
+                cursor.execute(query)
 
-            cursor.execute(query)
+                result = cursor.fetchone()
 
-            result = cursor.fetchone()
+                lat = result[0]
+                lon = result[1]
+                alt = result[2]
+                track = result[3]
+                speed = result[4]
+                climb = result[5]
+                callsign = result[6]
+                icao24 = result[7]
 
-            lat = result[0]
-            lon = result[1]
-            alt = result[2]
-            track = result[3]
-            speed = result[4]
-            climb = result[5]
-            callsign = result[6]
-            icao24 = result[7]
+                self.tracksrv_latitude = lat
+                self.tracksrv_longitude = lon
+                self.tracksrv_altitude = alt
+                self.tracksrv_track = track
+                self.tracksrv_speed = speed
+                self.tracksrv_climb = climb
+                self.callsign = callsign
+                self.icao24 = icao24
 
-            self.tracksrv_latitude = lat
-            self.tracksrv_longitude = lon
-            self.tracksrv_altitude = alt
-            self.tracksrv_track = track
-            self.tracksrv_speed = speed
-            self.tracksrv_climb = climb
-            self.callsign = callsign
-            self.icao24 = icao24
-
-            cursor.close()
+                cursor.close()
+            except MySQLdb.Error as e:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            finally:
+                cursor.close()
 
             time.sleep(0.5)

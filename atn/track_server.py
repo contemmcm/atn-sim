@@ -208,9 +208,14 @@ class TrackServer:
 
     def _update(self):
 
+        self.logger.info("Initializing EMANE readings...")
+
         while True:
             t0 = time.time()
+
             nodes = emane_utils.get_all_locations()
+
+            self.logger.debug("EMANE responded in %f secs " % (time.time() - t0) )
 
             for n in nodes:
                 cursor = self.db_update.cursor()

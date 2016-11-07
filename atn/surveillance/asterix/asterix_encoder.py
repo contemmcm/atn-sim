@@ -41,6 +41,9 @@ class AdsBAsterixEncode(object):
         ## net [string]: IPv4 address.
         self.net = '127.0.0.1'
 
+        ## time_service_message [number]: Time in seconds for sending service message
+        self.time_service_message = 6
+
     def create_socket(self, port):
         """Creates the socket for receiving the ADS-B messages.
 
@@ -80,7 +83,7 @@ class AdsBAsterixEncode(object):
             asterix_record (dictionary): A ASTERIX record in a dicitionary
 
         """
-        # Encoding data to ASETRIX format
+        # Encoding data to ASTERIX format
         data_bin = asterix_utils.encode(asterix_record)
         # print ("%x" % data_bin)
         msg = hex(data_bin).rstrip("L").lstrip("0x")
@@ -92,8 +95,9 @@ class AdsBAsterixEncode(object):
         Sends the service status message of the CNS/ATM Ground Station.
 
         """
+        print "send message ASTERIX CAT23"
         # Gets the message delivery time
-        time_utc = time.gmtime(time.time())
+        time_utc = time.gmtime(time.time()+1)
         # Converts for second:
         time_of_day = int(time_utc.tm_hour) * 3600 + int(time_utc.tm_min) * 60 + int(time_utc.tm_sec)
 

@@ -9,8 +9,8 @@ node n1 {
 	!
     }
     canvas c1
-    iconcoords {146.0 38.0}
-    labelcoords {146.0 70.0}
+    iconcoords {530.0 547.0}
+    labelcoords {530.0 579.0}
     interface-peer {eth0 n6}
     custom-config {
 	custom-config-id service:TrackS
@@ -111,8 +111,8 @@ node n3 {
 	!
     }
     canvas c1
-    iconcoords {234.0 182.0}
-    labelcoords {234.0 214.0}
+    iconcoords {234.0 168.0}
+    labelcoords {234.0 200.0}
     interface-peer {eth0 n6}
     services {DefaultRoute}
 }
@@ -131,8 +131,8 @@ node n4 {
 	!
     }
     canvas c1
-    iconcoords {455.0 104.0}
-    labelcoords {455.0 136.0}
+    iconcoords {409.0 675.0}
+    labelcoords {409.0 707.0}
     interface-peer {eth0 n6}
     interface-peer {eth1 n5}
     services {zebra OSPFv3MDR vtysh IPForward GPSd Dump1090 AdsbIn}
@@ -192,8 +192,8 @@ node n5 {
 	!
     }
     canvas c1
-    iconcoords {550.0 343.0}
-    labelcoords {550.0 375.0}
+    iconcoords {508.0 345.0}
+    labelcoords {508.0 377.0}
     interface-peer {eth0 n4}
     interface-peer {eth1 n7}
     services {zebra OSPFv3MDR vtysh IPForward AsterixServer}
@@ -212,7 +212,7 @@ node n5 {
 	sic = 5
 	port = 40005
 	txport = 50005
-	net = 172.16.0.20
+	net = 172.16.0.215
 	
 	}
     }
@@ -310,8 +310,8 @@ node n2 {
 	!
     }
     canvas c1
-    iconcoords {86.0 569.0}
-    labelcoords {86.0 601.0}
+    iconcoords {866.0 312.0}
+    labelcoords {866.0 344.0}
     interface-peer {eth0 n6}
     services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut}
 }
@@ -328,8 +328,8 @@ node n8 {
 	!
     }
     canvas c1
-    iconcoords {107.0 657.0}
-    labelcoords {107.0 689.0}
+    iconcoords {633.0 428.0}
+    labelcoords {633.0 460.0}
     services {DefaultRoute SSH TrackServer}
     interface-peer {eth0 n6}
 }
@@ -341,8 +341,8 @@ node n9 {
 	!
     }
     canvas c1
-    iconcoords {438.0 496.0}
-    labelcoords {438.0 528.0}
+    iconcoords {507.0 155.0}
+    labelcoords {507.0 187.0}
     interface-peer {0 n5}
 }
 
@@ -383,7 +383,7 @@ link l8 {
 canvas c1 {
     name {Canvas1}
     refpt {0 0 -15.485570 -48.337519 2.0}
-    scale 12000.0
+    scale {12000.0}
     size {1000 750}
 }
 
