@@ -1,5 +1,6 @@
 import binascii
 import os
+import sys
 import socket
 import threading
 import time
@@ -13,9 +14,11 @@ from ..adsb_out import AdsbOut
 
 class AdsbGhost:
 
-    delay = 30
+    delay = 70
 
-    icao24_rewrite = True
+    icao24_rewrite = False
+    flood = False
+
     icao24_table = {}
     icao24 = []
     icao24_spoofed = []
@@ -41,7 +44,7 @@ class AdsbGhost:
                     icao24 = adsb_decoder.get_icao_addr(message)
 
                     # Do not spoof our own spoofed messages
-                    if icao24 in self.icao24_spoofed:
+                    if icao24 in self.icao24_spoofed and not self.flood:
                         continue
 
                     if icao24 not in self.icao24:
@@ -77,7 +80,17 @@ def adsb_replay(message, delay, dev):
 
 
 def main():
+
     tx = AdsbGhost()
+
+    if "--rewrite-icao24" in sys.argv:
+        print " > Rewritting ICAO24"
+        tx.icao24_rewrite = True
+
+    if "--flood" in sys.argv:
+        print " > Flooding with delayed messages"
+        tx.flood = True
+
     tx.start()
 
 if __name__ == '__main__':

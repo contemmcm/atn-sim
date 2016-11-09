@@ -13,6 +13,7 @@ from .network import mcast_socket
 
 from emanesh.events import EventService
 from emanesh.events import LocationEvent
+
 from collections import deque
 
 
@@ -30,6 +31,8 @@ class TrackServer:
     db_user = 'atn_sim'
     db_pass = 'atn_sim'
     db_host = '172.17.255.254'
+
+    tracks = {}
 
     def __init__(self, config="track_server.cfg"):
 
@@ -84,7 +87,8 @@ class TrackServer:
         self._init_nems_table()
         self._init_mapings()
 
-        t1 = threading.Thread(target=self._update, args=())
+        # t1 = threading.Thread(target=self._update_from_emane, args=())
+        t1 = threading.Thread(target=self._update_from_tracks, args=())
         t2 = threading.Thread(target=self.listen, args=())
         t3 = threading.Thread(target=self._process_queue, args=())
 
@@ -177,6 +181,23 @@ class TrackServer:
         self.service.publish(0, event)
 
         #
+        # Update local variables
+        #
+        obj = {
+            'latitude': msg_lat,
+            'longitude': msg_lon,
+            'altitude': msg_alt * FT_TO_M,
+            'pitch': 0.0,
+            'roll': 0.0,
+            'yaw': 0.0,
+            'azimuth': msg_azm,
+            'elevation': 0.0,
+            'magnitude': msg_vel * KT_TO_MPS,
+        }
+
+        self.tracks[nemid] = obj
+
+        #
         # Update transponder's parameters using database shared memory
         #
 
@@ -206,7 +227,7 @@ class TrackServer:
             print "listen(): MySQL Error [%d]: %s" % (e.args[0], e.args[1])
             logging.warn("listen(): MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 
-    def _update(self):
+    def _update_from_emane(self):
 
         self.logger.info("Initializing EMANE readings...")
 
@@ -229,6 +250,55 @@ class TrackServer:
                           % (n['latitude'], n['longitude'], n['altitude'], n['pitch'], n['roll'], n['yaw'],
                              n['azimuth'], n['elevation'], n['magnitude'], n['nem'])
 
+                    cursor.execute(sql)
+
+                    self.db_update.commit()
+
+                    cursor.close()
+
+                    dt = time.time() - t0
+
+                    # Logging
+                    # self.logger.info("Tables updated successfully. Processing time: %f s" % dt)
+                    if dt > self.update_interval:
+                        self.logger.warning("Position updates is taking longer than %f s" % self.update_interval)
+                except MySQLdb.Error, e:
+
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+
+                    time.sleep(0.5)
+                    continue
+
+            dt = time.time() - t0
+
+            if self.update_interval - dt > 0:
+                time.sleep(self.update_interval - dt)
+
+    def _update_from_tracks(self):
+
+        self.logger.info("Initializing PTRACKS readings...")
+
+        while True:
+            t0 = time.time()
+
+            self.logger.debug("Reading cached locations from PTRACKS")
+
+            for nem in self.nems:
+                cursor = self.db_update.cursor()
+
+                # Checks if
+                if nem not in self.tracks:
+                    continue
+
+                try:
+                    sql = "UPDATE nem set latitude=%f, longitude=%f, altitude=%f, pitch=%f, roll=%f, yaw=%f, " \
+                          "azimuth=%f, elevation=%f, magnitude=%f,  last_update=now() WHERE id=%d" \
+                          % (self.tracks[nem]['latitude'], self.tracks[nem]['longitude'], self.tracks[nem]['altitude'],
+                             self.tracks[nem]['pitch'], self.tracks[nem]['roll'], self.tracks[nem]['yaw'],
+                             self.tracks[nem]['azimuth'], self.tracks[nem]['elevation'], self.tracks[nem]['magnitude'],
+                             nem)
+
+                    print sql
                     cursor.execute(sql)
 
                     self.db_update.commit()

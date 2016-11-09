@@ -1,9 +1,9 @@
 import math
 import subprocess
-import time
 
-from emanesh.events import EventService
-from emanesh.events import LocationEvent
+from emanesh.emaneshell import EMANEShell
+
+shell = EMANEShell("127.0.0.1", 47000)
 
 
 def set_location(nemid, lat, lon, alt, heading, speed, climb):
@@ -35,6 +35,8 @@ def get_all_locations():
     #                                   "get", "table", '*', "phy", "LocationEventInfoTable"])
     output = subprocess.check_output(["/usr/bin/emanesh", "127.0.0.1",
                                      "get", "table", "nems", "phy", "LocationEventInfoTable"])
+
+    # shell.onecmd("get table nems phy LocationEventInfoTable")
 
     lines = output.splitlines()[2:]
 
