@@ -2,10 +2,26 @@ import os
 import subprocess
 
 
-def get_node_name():
+def get_node_name(nem_id=None, session_id=None):
 
-    out = subprocess.check_output(["/bin/hostname"])
-    return out.rstrip('\n')
+    # No arguments: returns the hostname of the caller
+    if nem_id is None and session_id is None:
+        out = subprocess.check_output(["/bin/hostname"])
+        return out.rstrip('\n')
+
+    if session_id is None:
+        session_id = get_session_id()
+
+    if nem_id is not None:
+        fname = "/tmp/pycore.%s/emane_nems" % session_id
+        f = open(fname, "r")
+        for i in f.readlines():
+            j = i.split()
+
+            if int(j[2]) == int(nem_id):
+                return j[0]
+
+    return None
 
 
 def get_node_list(session_id=None):
