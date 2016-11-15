@@ -57,6 +57,7 @@ install: deps dump1090 core emane ptracks
 	cd configs/db ; sudo /bin/sh setup.sh ; cd ../..
 
 	# Start CORE-DAEMON
+	sudo service core-daemon stop
 	sudo service core-daemon start
 
 clean:
@@ -64,6 +65,7 @@ clean:
 	rm -rf emane
 	rm -rf dump1090
 	rm -rf ptracks
+	rm quagga-mr_0.99.21mr2.2_amd64.deb
 
 uninstall:
 	sudo rm /opt/atn-sim
