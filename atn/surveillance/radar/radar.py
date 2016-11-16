@@ -8,6 +8,7 @@ import time
 import socket
 
 from ..icea.icea_protocol import Icea
+from ..asterix import asterix_utils
 
 from ... import core_utils
 from ... import emane_utils
@@ -41,6 +42,9 @@ class Radar:
     db_user = 'atn_sim'
     db_pass = 'atn_sim'
     db_host = '172.17.255.254'
+
+    net = "172.16.0.255"
+    port = 20004
 
 
     # -------------------------------------------------------------------------
@@ -123,6 +127,11 @@ class Radar:
         print "  Mode:         %s" % self.net_mode
         print "  Radar Proto.: %s" % self.net_proto
 
+        # sock (socket):  The end point to send ASTERIX CAT 21.
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
 
     # -------------------------------------------------------------------------
     # method start
@@ -140,24 +149,23 @@ class Radar:
 
             tracks = self.detect()
 
+            for s in range(0, 31):
+                sector = s * 11.25  # Setor em graus
+
+                send_n = False
+                if s == 25:
+                    send_n = True
+
+                self.broadcast_asterix(tracks, sector, send_n)
+
+                time.sleep(0.125)
+
             print "Objects detected: %d" % len(tracks)
             for t in tracks:
                 print "  > %s: %f %f %f %f %f %s" % (t[7], t[1], t[2], t[3], t[4], t[5], t[8])
 
-            self.broadcast(tracks)
+            # self.broadcast(tracks)
 
-            t1 = time.time()
-
-            # Processing time
-            ptime = t1 - t0
-
-            print "========"
-
-            time.sleep(radar.sweep_time - ptime)
-
-            t2 = time.time()
-
-            print t2-t0
 
 
     # -------------------------------------------------------------------------
@@ -253,6 +261,63 @@ class Radar:
             print "read_transponder(): MySQL Error [%d]: %s" % (e.args[0], e.args[1])
 
         return None, None
+
+    def broadcast_asterix(self, tracks, sector, north_flag=False):
+
+        sac = 232
+        sic = 10
+        tod = time.time()
+
+        sector_record = {
+            444: {'MsgTyp': 2},
+            10: {'SAC': sac, 'SIC': sic},
+            20: {'Azi': sector},
+            30: {'ToD': tod}
+        }
+
+        north_record = {
+            444: {'MsgTyp': 2},
+            10: {'SAC': sac, 'SIC': sic},
+            30: {'ToD': (tod+0.867)},
+            41: {'RotS': 4},
+            # 50: {'COM_presence': 1, 'PSR_presence': 1, 'MDS_presence': 1, 'fx': 0,
+            #      # COM
+            #      'NOGO': 0, 'RDPC': 0, 'RDPR': 0, 'OVL RDP COM': 0, 'OVL XMT': 0, 'MSC COM': 0, 'TSV': 0,
+            #      # PSR
+            #      'ANT PSR': 0, 'CHAB PSR': 3, 'OVL': 0, 'OVL RDP': 0, 'MSC PSR': 0,
+            #      # MDS
+            #      'ANT': 0, 'CHAB': 1, 'OVL_SUR': 0, 'MSC': 0, 'SCF': 0, 'DLF': 0, 'OVL SCF': 0, 'OVL DLF': 0,
+            #      }
+
+        }
+
+        sector_record = {34: [sector_record]}
+        north_record = {34: [north_record]}
+
+        encoded_sector = self.asterix_encode(sector_record)
+        encoded_north = self.asterix_encode(north_record)
+
+        # self.net_send(encoded_sector)
+        self.transmit(sector_record)
+
+        if north_flag:
+            # self.net_send(encoded_north)
+            #self.transmit(encoded_north)
+            self.transmit(north_record)
+
+    def asterix_encode(self, asterix_record):
+        # Encoding data to ASTERIX format
+        data_bin = asterix_utils.encode(asterix_record)
+        return hex(data_bin).rstrip("L").lstrip("0x")
+
+    def transmit(self, asterix_record):
+        # Encoding data to ASTERIX format
+        data_bin = asterix_utils.encode(asterix_record)
+        # print ("%x" % data_bin)
+        msg = hex(data_bin).rstrip("L").lstrip("0x")
+        self.sock.sendto(binascii.unhexlify(msg), (self.net, self.port))
+        print msg
+
 
     # -------------------------------------------------------------------------
     # method broadcast
