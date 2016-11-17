@@ -9,8 +9,8 @@ node n1 {
 	!
     }
     canvas c1
-    iconcoords {121.0 54.0}
-    labelcoords {121.0 86.0}
+    iconcoords {370.0 302.0}
+    labelcoords {370.0 334.0}
     interface-peer {eth0 n6}
     custom-config {
 	custom-config-id service:TrackS
@@ -113,8 +113,8 @@ node n4 {
 	!
     }
     canvas c1
-    iconcoords {509.0 593.0}
-    labelcoords {509.0 625.0}
+    iconcoords {509.0 492.0}
+    labelcoords {509.0 524.0}
     interface-peer {eth0 n6}
     interface-peer {eth1 n5}
     services {zebra OSPFv3MDR vtysh IPForward GPSd Dump1090 AdsbIn}
@@ -250,8 +250,8 @@ node n6 {
 	}
     }
     canvas c1
-    iconcoords {31.0 27.0}
-    labelcoords {31.0 59.0}
+    iconcoords {32.0 27.0}
+    labelcoords {32.0 59.0}
     interface-peer {e0 n1}
     interface-peer {e3 n4}
     interface-peer {e1 n2}
@@ -287,8 +287,8 @@ node n2 {
 	!
     }
     canvas c1
-    iconcoords {118.0 569.0}
-    labelcoords {118.0 601.0}
+    iconcoords {319.0 318.0}
+    labelcoords {319.0 350.0}
     interface-peer {eth0 n6}
     services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut}
 }
@@ -305,8 +305,8 @@ node n8 {
 	!
     }
     canvas c1
-    iconcoords {957.0 32.0}
-    labelcoords {957.0 64.0}
+    iconcoords {953.0 28.0}
+    labelcoords {953.0 60.0}
     services {DefaultRoute SSH TrackServer}
     interface-peer {eth0 n6}
     custom-config {
@@ -329,7 +329,7 @@ node n8 {
 	[Tracks]
 	server = 172.17.255.254
 	port = 5006
-	exercise = SPRINT5
+	exercise = SBBR
 	; n1 = 1
 	
 	}
@@ -366,7 +366,7 @@ link l7 {
 canvas c1 {
     name {Canvas1}
     refpt {0 0 -15.485570 -48.337519 2.0}
-    scale {12000.0}
+    scale 12000.0
     size {1000 750}
 }
 
