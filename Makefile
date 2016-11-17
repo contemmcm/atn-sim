@@ -41,6 +41,7 @@ install: deps dump1090 core emane ptracks
 
 	# PTRACKS
 	cd ptracks; sudo ./install ; cd ..
+	sudo update-rc.d ptracks-net defaults
 
 	# ATN-SIM
 
