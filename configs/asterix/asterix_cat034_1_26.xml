@@ -141,8 +141,10 @@
                     </Bits>
                 </Fixed>				
             </Variable>
-			
-			<Fixed length="1">
+
+                <!-- COM -->
+			    <Fixed length="1">
+
                     <Bits bit="8">
 						<BitsShortName>NOGO</BitsShortName>
                         <BitsName>NOGO</BitsName>
@@ -191,7 +193,8 @@
 						<BitsConst>0</BitsConst>
                     </Bits>
                 </Fixed>				
-				
+
+                <!-- PSR -->
 				<Fixed length="1">
                     <Bits bit="8">
 						<BitsShortName>ANT PSR</BitsShortName>
@@ -231,31 +234,32 @@
 						<BitsConst>0</BitsConst>
                     </Bits>
                 </Fixed>				
-				
+
+                <!-- SSR -->
 				<Fixed length="1">
                     <Bits bit="8">
-						<BitsShortName>ANT</BitsShortName>
-                        <BitsName>ANT</BitsName>
+						<BitsShortName>ANT SSR</BitsShortName>
+                        <BitsName>ANT SSR</BitsName>
 						<BitsValue val="1">antenna 2</BitsValue>
                         <BitsValue val="0">antenna 1</BitsValue>	
                     </Bits>
 					<Bits from="7" to="6">
-						<BitsShortName>CHAB</BitsShortName>
-                        <BitsName>CH-A/B</BitsName>
+						<BitsShortName>CHAB SSR</BitsShortName>
+                        <BitsName>CH-A/B SSR</BitsName>
 						<BitsValue val="0">No channel selected</BitsValue>
                         <BitsValue val="1">Channel A only selected</BitsValue>
 						<BitsValue val="2">Channel B only selected</BitsValue>
                         <BitsValue val="3">Invalid combination</BitsValue>
                     </Bits>   						
                     <Bits bit="5">
-                        <BitsShortName>OVL</BitsShortName>
-                        <BitsName>OVL</BitsName>
+                        <BitsShortName>OVL SSR</BitsShortName>
+                        <BitsName>OVL SSR</BitsName>
 						<BitsValue val="0">No overload</BitsValue>
                         <BitsValue val="1">Overload</BitsValue>	
                     </Bits>
 					<Bits bit="4">
-						<BitsShortName>MSC</BitsShortName>
-                        <BitsName>MSC</BitsName>
+						<BitsShortName>MSC SSR</BitsShortName>
+                        <BitsName>MSC SSR</BitsName>
 						<BitsValue val="1">Monitoring system disconnected</BitsValue>
                         <BitsValue val="0">Monitoring system connected</BitsValue>
                     </Bits>
@@ -265,7 +269,8 @@
 						<BitsConst>0</BitsConst>
                     </Bits>
                 </Fixed>
-				
+
+                <!-- MDS -->
 				<Fixed length="2">
                     <Bits bit="16">
 						<BitsShortName>ANT</BitsShortName>

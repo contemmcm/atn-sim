@@ -98,15 +98,15 @@ def load_asterix_category_format(k):
         path_filename3 = os.path.dirname(os.path.realpath(__file__)) + "../../../config/asterix/" + filenames[k]
 
         if os.path.isfile(path_filename1):
-            print "Loading file '%s'" % path_filename1
+            # print "Loading file '%s'" % path_filename1
             return minidom.parse(path_filename1)
 
         if os.path.isfile(path_filename2):
-            print "Loading file '%s'" % path_filename2
+            # print "Loading file '%s'" % path_filename2
             return minidom.parse(path_filename2)
 
         if os.path.isfile(path_filename3):
-            print "Loading file '%s'" % path_filename3
+            # print "Loading file '%s'" % path_filename3
             return minidom.parse(path_filename3)
 
         return None

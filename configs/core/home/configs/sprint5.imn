@@ -9,8 +9,8 @@ node n1 {
 	!
     }
     canvas c1
-    iconcoords {530.0 547.0}
-    labelcoords {530.0 579.0}
+    iconcoords {376.0 382.0}
+    labelcoords {376.0 414.0}
     interface-peer {eth0 n6}
     custom-config {
 	custom-config-id service:TrackS
@@ -111,8 +111,8 @@ node n3 {
 	!
     }
     canvas c1
-    iconcoords {234.0 168.0}
-    labelcoords {234.0 200.0}
+    iconcoords {626.0 687.0}
+    labelcoords {626.0 719.0}
     interface-peer {eth0 n6}
     services {DefaultRoute}
 }
@@ -131,8 +131,8 @@ node n4 {
 	!
     }
     canvas c1
-    iconcoords {409.0 675.0}
-    labelcoords {409.0 707.0}
+    iconcoords {489.0 475.0}
+    labelcoords {489.0 507.0}
     interface-peer {eth0 n6}
     interface-peer {eth1 n5}
     services {zebra OSPFv3MDR vtysh IPForward GPSd Dump1090 AdsbIn}
@@ -192,8 +192,8 @@ node n5 {
 	!
     }
     canvas c1
-    iconcoords {508.0 345.0}
-    labelcoords {508.0 377.0}
+    iconcoords {555.0 314.0}
+    labelcoords {555.0 346.0}
     interface-peer {eth0 n4}
     interface-peer {eth1 n7}
     services {zebra OSPFv3MDR vtysh IPForward AsterixServer}
@@ -216,7 +216,7 @@ node n5 {
 	
 	}
     }
-    interface-peer {eth2 n9}
+    interface-peer {eth2 n11}
 }
 
 node n6 {
@@ -272,13 +272,14 @@ node n6 {
 	}
     }
     canvas c1
-    iconcoords {246.0 114.0}
-    labelcoords {246.0 146.0}
+    iconcoords {31.0 28.0}
+    labelcoords {31.0 60.0}
     interface-peer {e0 n1}
     interface-peer {e2 n3}
     interface-peer {e3 n4}
     interface-peer {e1 n2}
     interface-peer {e4 n8}
+    interface-peer {e5 n10}
 }
 
 node n7 {
@@ -293,8 +294,8 @@ node n7 {
 	!
     }
     canvas c1
-    iconcoords {802.0 346.0}
-    labelcoords {802.0 378.0}
+    iconcoords {692.0 441.0}
+    labelcoords {692.0 473.0}
     interface-peer {eth0 n5}
     services {DefaultRoute SSH Dump1090}
 }
@@ -310,8 +311,8 @@ node n2 {
 	!
     }
     canvas c1
-    iconcoords {866.0 312.0}
-    labelcoords {866.0 344.0}
+    iconcoords {345.0 383.0}
+    labelcoords {345.0 415.0}
     interface-peer {eth0 n6}
     services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut}
 }
@@ -328,10 +329,36 @@ node n8 {
 	!
     }
     canvas c1
-    iconcoords {633.0 428.0}
-    labelcoords {633.0 460.0}
+    iconcoords {955.0 22.0}
+    labelcoords {955.0 54.0}
     services {DefaultRoute SSH TrackServer}
     interface-peer {eth0 n6}
+    custom-config {
+	custom-config-id service:TrackServer
+	custom-command TrackServer
+	config {
+	files=('track_server.cfg', )
+	}
+    }
+    custom-config {
+	custom-config-id service:TrackServer:track_server.cfg
+	custom-command track_server.cfg
+	config {
+	[Database]
+	; db_host = 172.17.255.254
+	; db_name = atn_sim
+	; db_user = atn_sim
+	; db_pass = atn_sim
+	
+	[Tracks]
+	; server = 172.17.255.254
+	; port = 5006
+	exercise = SBBR
+	n1 = 1
+	n2 = 2
+	
+	}
+    }
 }
 
 node n9 {
@@ -341,9 +368,103 @@ node n9 {
 	!
     }
     canvas c1
-    iconcoords {507.0 155.0}
-    labelcoords {507.0 187.0}
-    interface-peer {0 n5}
+    iconcoords {507.0 193.0}
+    labelcoords {507.0 225.0}
+    interface-peer {0 n11}
+}
+
+node n10 {
+    type router
+    model radar
+    network-config {
+	hostname n10
+	!
+	interface eth0
+	 ip address 172.16.0.241/24
+	!
+	interface eth1
+	 ip address 10.0.0.4/24
+	!
+    }
+    canvas c1
+    iconcoords {388.0 124.0}
+    labelcoords {388.0 156.0}
+    interface-peer {eth1 n6}
+    services {zebra OSPFv3MDR vtysh IPForward GPSd Radar}
+    interface-peer {eth0 n11}
+    custom-config {
+	custom-config-id service:Radar
+	custom-command Radar
+	config {
+	files=('radar.cfg', 'radar.sh', )
+	}
+    }
+    custom-config {
+	custom-config-id service:Radar:radar.cfg
+	custom-command radar.cfg
+	config {
+	[Location]
+	; Latitude of radar (in decimal degrees)
+	; latitude = -15.870969
+	latitude = -19.723889
+	
+	; Longitude of radar (in decimal degrees)
+	; longitude = -47.917024
+	longitude = -47.2980556
+	
+	; Altitude of radar (in meters)
+	altitude = 2681
+	
+	[PSR]
+	
+	; The maximum horizontal distance of a detectable object (in NM)
+	psr_horizontal_coverage = 80
+	
+	; The maximum altitude of a detectable object (in FT)
+	vertical_coverage = 60000
+	
+	; Minimum elevation angle of detectable objects (in degrees)
+	min_angle = 0
+	
+	; Maximum elevation angle of detectable objects (in degrees)
+	max_angle = 85
+	
+	; The maximum horizontal distance of Secundary SSR (in NM)
+	ssr_horizontal_coverage = 200
+	
+	; The time it takes to sweep the entire 360 degrees horizon (in seconds)
+	sweep_time = 4.0
+	
+	[Network]
+	
+	; IP address of the receiver of radar plots (e.g. ATC system)
+	destination = 172.16.0.255
+	
+	; Transport layer port of the destination
+	port = 20004
+	
+	; Mode of transmission: unicast or broadcast
+	mode = broadcast
+	
+	; Radar protocol to be used
+	protocol = ASTERIX
+	
+	}
+    }
+}
+
+node n11 {
+    type lanswitch
+    network-config {
+	hostname n11
+	!
+    }
+    canvas c1
+    iconcoords {387.0 271.0}
+    labelcoords {387.0 295.0}
+    interface-peer {e0 n9}
+    interface-peer {e1 n5}
+    interface-peer {e2 n10}
 }
 
 link l1 {
@@ -376,14 +497,28 @@ link l7 {
     nodes {n6 n8}
 }
 
+link l10 {
+    nodes {n6 n10}
+}
+
 link l8 {
-    nodes {n5 n9}
+    nodes {n11 n9}
+}
+
+link l9 {
+    nodes {n11 n5}
+    bandwidth 0
+}
+
+link l11 {
+    nodes {n11 n10}
+    bandwidth 0
 }
 
 canvas c1 {
     name {Canvas1}
-    refpt {0 0 -15.485570 -48.337519 2.0}
-    scale {12000.0}
+    refpt {0 0 -15.343608 -48.400366 2.0}
+    scale {14000.0}
     size {1000 750}
 }
 

@@ -107,6 +107,8 @@ class Radar:
             self.empty_msg = {}
             for sector in range(0, 32):
                 self.empty_msg[sector] = self.encoder.get_empty_sector_msg(sector)
+        elif self.net_proto == "ASTERIX":
+            pass
         else:
             print "Radar protocol %s is not supported." % self.net_proto
             self.encoder = None
@@ -116,6 +118,8 @@ class Radar:
 
         # DB connection specific for thread _process_msg()
         self.db_process = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
+
+        self.altitude = 0.1
 
         print "Location of Radar:"
         print "  Latitude:  %f" % self.latitude
@@ -149,22 +153,30 @@ class Radar:
 
             tracks = self.detect()
 
-            for s in range(0, 31):
-                sector = s * 11.25  # Setor em graus
+            if self.net_proto == "ASTERIX":
 
-                send_n = False
-                if s == 25:
-                    send_n = True
+                for s in range(0, 31):
+                    sector = s * 11.25  # Setor em graus
 
-                self.broadcast_asterix(tracks, sector, send_n)
+                    send_n = False
+                    if s == 25:
+                        send_n = True
 
-                time.sleep(0.125)
+                    # self.broadcast_asterix(tracks, sector, send_n)
+                    self.broadcast_asterix(tracks, s, send_n)
+
+                    time.sleep(0.125)
+            elif self.net_proto == "ICEA":
+                self.broadcast_icea(tracks)
 
             print "Objects detected: %d" % len(tracks)
             for t in tracks:
                 print "  > %s: %f %f %f %f %f %s" % (t[7], t[1], t[2], t[3], t[4], t[5], t[8])
 
-            # self.broadcast(tracks)
+            dt = time.time() - t0
+            print "Complete rotation in %f sec" % dt
+
+
 
 
 
@@ -233,7 +245,9 @@ class Radar:
                                         speed * self.MPS_TO_KT,
                                         ssr,
                                         callsign,
-                                        sector])
+                                        sector,
+                                        h_angle,
+                                        ])
 
         return detected_tracks
 
@@ -271,7 +285,7 @@ class Radar:
         sector_record = {
             444: {'MsgTyp': 2},
             10: {'SAC': sac, 'SIC': sic},
-            20: {'Azi': sector},
+            20: {'Azi': (sector * 11.25)},
             30: {'ToD': tod}
         }
 
@@ -291,18 +305,57 @@ class Radar:
 
         }
 
-        sector_record = {34: [sector_record]}
+        # 0: nodenum,
+        # 1: x * self.M_TO_NM,
+        # 2: y * self.M_TO_NM,
+        # 3: z * self.M_TO_FT,
+        # 4: azimuth,
+        # 5: speed * self.MPS_TO_KT,
+        # 6: ssr,
+        # 7: callsign,
+        # 8: sector
+        # 9: theta (h_angle)
+
+        detected_tracks = []
+
+        for t in tracks:
+
+            if t[8] != sector:
+                continue
+
+            dist = math.sqrt(t[1]*t[1] + t[2]*t[2] + t[3]*t[3])  # Distance from radar (3D)
+            dist2d = math.sqrt(t[1]*t[1] + t[2]*t[2])  # Distance from radar (2D)
+
+            track_record = {
+                10: {'SAC': sac, 'SIC': sic},
+                140: {'ToD': tod},
+                20: {'TYP': 3, 'SIM': 0, 'RDP': 0, 'SPI': 0, 'RAB': 0, 'FX': 1, 'TST': 0, 'ME': 0, 'MI': 0, 'FOEFRI': 0, 'FX2': 0},
+                40: {'RHO': dist2d, 'THETA': t[9]},
+                70: {'V': 0, 'G': 0, 'L': 0, 'Mode3A': int(t[6], 8)},
+                90: {'V': 0, 'G': 0, 'FL': (t[3]/100)},
+                161: {'Tn': t[0]},
+                200: {'CGS': t[5], 'CHdg': t[4]},
+                170: {'CNF': 0, 'RAD': 0, 'DOU': 0, 'MAH': 0, 'CDM': 0, 'FX': 1, 'TRE': 0, 'GHO': 0, 'SUP': 0, 'TCC': 0, 'FX2': 0}
+            }
+
+            detected_tracks.append(track_record)
+
+        if len(detected_tracks) > 0:
+            sector_record = {48: detected_tracks, 34: [sector_record]}
+        else:
+            sector_record = {34: [sector_record]}
+
         north_record = {34: [north_record]}
 
-        encoded_sector = self.asterix_encode(sector_record)
-        encoded_north = self.asterix_encode(north_record)
+        # encoded_sector = self.asterix_encode(sector_record)
+        # encoded_north = self.asterix_encode(north_record)
 
         # self.net_send(encoded_sector)
         self.transmit(sector_record)
 
         if north_flag:
             # self.net_send(encoded_north)
-            #self.transmit(encoded_north)
+            # self.transmit(encoded_north)
             self.transmit(north_record)
 
     def asterix_encode(self, asterix_record):
@@ -322,7 +375,7 @@ class Radar:
     # -------------------------------------------------------------------------
     # method broadcast
     # -------------------------------------------------------------------------
-    def broadcast(self, tracks):
+    def broadcast_icea(self, tracks):
         """method broadcast
 
         This method sends first message empty sector network and seeks to identify
@@ -444,7 +497,7 @@ class RadarUtils:
 
 if __name__ == '__main__':
 
-    session_id = core_utils.get_session_id()
+    # session_id = core_utils.get_session_id()
 
     radar = Radar()
     radar.start()

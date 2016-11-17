@@ -27,9 +27,9 @@ emane:
 ptracks:
 	git clone https://github.com/contemmcm/ptracks.git
 
-all: deps dump1090 core emane ptracks
+all: dump1090 core emane ptracks
 
-install: deps dump1090 core emane ptracks
+install: dump1090 core emane ptracks
 	# CORE
 	cd core ; sudo make install; cd ..
 
@@ -69,7 +69,7 @@ clean:
 	rm -rf emane
 	rm -rf dump1090
 	rm -rf ptracks
-	rm quagga-mr_0.99.21mr2.2_amd64.deb
+	rm -f quagga-mr_0.99.21mr2.2_amd64.deb
 
 uninstall:
 	sudo rm /opt/atn-sim
