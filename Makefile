@@ -60,6 +60,9 @@ install: deps dump1090 core emane ptracks
 	# Start CORE-DAEMON
 	sudo service core-daemon stop
 	sudo service core-daemon start
+	
+	# Start PTRACKS-NET
+	sudo service ptracks-net start
 
 clean:
 	rm -rf core
