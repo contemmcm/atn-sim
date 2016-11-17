@@ -37,7 +37,6 @@ class Gpsd(CoreService):
         ''' Return a string that will be written to filename, or sent to the
             GUI for user customization.
         '''
-        node_id = node.name[1:]
 
         # Required packages (Ubuntu 14.04): mgen fping gpsd gpsd-clients cgps
         # iperf multitail olsrd openssh-server python-tk python-pmw python-lxml \
@@ -52,7 +51,7 @@ class Gpsd(CoreService):
         elif filename ==  'eventdaemon.xml':
             cfg = '<?xml version="1.0" encoding="UTF-8"?>\n'
             cfg += '<!DOCTYPE eventdaemon SYSTEM "file:///usr/share/emane/dtd/eventdaemon.dtd">\n'
-            cfg += '<eventdaemon nemid="%s">\n' % node_id
+            cfg += '<eventdaemon nemid="%s">\n' % node.objid
             cfg += '  <param name="eventservicegroup" value="224.1.2.8:45703"/>\n'
             cfg += '  <param name="eventservicedevice" value="ctrl0"/>\n'
             cfg += '  <agent definition="gpsdlocationagent.xml"/>\n'
@@ -63,7 +62,7 @@ class Gpsd(CoreService):
             cfg  = '<?xml version="1.0" encoding="UTF-8"?>\n'
             cfg += '<!DOCTYPE eventagent SYSTEM "file:///usr/share/emane/dtd/eventagent.dtd">\n'
             cfg += '<eventagent library="gpsdlocationagent">\n'
-            cfg += '  <param name="gpsdconnectionenabled" value="no"/>\n'
+            # cfg += '  <param name="gpsdconnectionenabled" value="no"/>\n'
             cfg += '  <param name="pseudoterminalfile"\n'
             cfg += '         value="var.run/gps.pty"/>\n'
             cfg += '</eventagent>\n'

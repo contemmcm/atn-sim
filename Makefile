@@ -18,8 +18,8 @@ core:
 
 emane:
 	git clone https://github.com/adjacentlink/emane.git ;\
-	git checkout v0.9.3                                 ;\
 	cd emane                                            ;\
+#	git checkout v1.0.1                                 ;\
 	./autogen.sh                                        ;\
 	./configure                                         ;\
 	make deb
