@@ -162,8 +162,8 @@
                         <BitsValue val="0">Default</BitsValue>	
                     </Bits>
 					<Bits bit="5">
-						<BitsShortName>OVL RDP</BitsShortName>
-                        <BitsName>OVL RDP</BitsName>
+						<BitsShortName>OVL RDP COM</BitsShortName>
+                        <BitsName>OVL RDP COM</BitsName>
 						<BitsValue val="1">Overload in RDP</BitsValue>
                         <BitsValue val="0">No overload</BitsValue>	
                     </Bits>
@@ -174,8 +174,8 @@
                         <BitsValue val="0">No overload</BitsValue>	
                     </Bits>
 					<Bits bit="3">
-						<BitsShortName>MSC</BitsShortName>
-                        <BitsName>MSC</BitsName>
+						<BitsShortName>MSC COM</BitsShortName>
+                        <BitsName>MSC COM</BitsName>
 						<BitsValue val="1">Monitoring system disconnected</BitsValue>
                         <BitsValue val="0">Monitoring system connected</BitsValue>
                     </Bits>
@@ -194,14 +194,14 @@
 				
 				<Fixed length="1">
                     <Bits bit="8">
-						<BitsShortName>ANT</BitsShortName>
-                        <BitsName>ANT</BitsName>
+						<BitsShortName>ANT PSR</BitsShortName>
+                        <BitsName>ANT PSR</BitsName>
 						<BitsValue val="1">antenna 2</BitsValue>
                         <BitsValue val="0">antenna 1</BitsValue>	
                     </Bits>
 					<Bits from="7" to="6">
-						<BitsShortName>CHAB</BitsShortName>
-                        <BitsName>CH-A/B</BitsName>
+						<BitsShortName>CHAB PSR</BitsShortName>
+                        <BitsName>CH-A/B PSR</BitsName>
 						<BitsValue val="0">No channel selected</BitsValue>
                         <BitsValue val="1">Channel A only selected</BitsValue>
 						<BitsValue val="2">Channel B only selected</BitsValue>
@@ -220,8 +220,8 @@
                         <BitsValue val="0">No overload</BitsValue>	
                     </Bits>
 					<Bits bit="4">
-						<BitsShortName>MSC</BitsShortName>
-                        <BitsName>MSC</BitsName>
+						<BitsShortName>MSC PSR</BitsShortName>
+                        <BitsName>MSC PSR</BitsName>
 						<BitsValue val="1">Monitoring system disconnected</BitsValue>
                         <BitsValue val="0">Monitoring system connected</BitsValue>
                     </Bits>
