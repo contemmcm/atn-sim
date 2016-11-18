@@ -155,17 +155,19 @@ class Radar:
 
             if self.net_proto == "ASTERIX":
 
-                for s in range(0, 31):
-                    sector = s * 11.25  # Setor em graus
+                for s in range(0, 32):
+
+                    tp = time.time()
 
                     send_n = False
                     if s == 25:
                         send_n = True
 
-                    # self.broadcast_asterix(tracks, sector, send_n)
                     self.broadcast_asterix(tracks, s, send_n)
 
-                    time.sleep(0.125)
+                    dtp = time.time() - tp
+
+                    time.sleep(0.125 - dtp)
             elif self.net_proto == "ICEA":
                 self.broadcast_icea(tracks)
 
