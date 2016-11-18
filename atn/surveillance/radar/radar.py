@@ -119,8 +119,6 @@ class Radar:
         # DB connection specific for thread _process_msg()
         self.db_process = MySQLdb.connect(self.db_host, self.db_user, self.db_pass, self.db_name)
 
-        self.altitude = 0.1
-
         print "Location of Radar:"
         print "  Latitude:  %f" % self.latitude
         print "  Longitude: %f" % self.longitude
@@ -151,13 +149,13 @@ class Radar:
 
             t0 = time.time()
 
-            tracks = self.detect()
-
             if self.net_proto == "ASTERIX":
 
-                for s in range(0, 32):
+                # ToDo: must call detect for each sector, otherwise there will be delays on detected track
+                tracks = self.detect()
+                tp = time.time()
 
-                    tp = time.time()
+                for s in range(0, 32):
 
                     send_n = False
                     if s == 25:
@@ -165,11 +163,14 @@ class Radar:
 
                     self.broadcast_asterix(tracks, s, send_n)
 
-                    dtp = time.time() - tp
+                dtp = time.time() - tp
 
-                    time.sleep(0.125 - dtp)
+                time.sleep(4.0 - dtp)
             elif self.net_proto == "ICEA":
+                tracks = self.detect()
                 self.broadcast_icea(tracks)
+
+                time.sleep(self.sweep_time - (time.time() - t0))
 
             print "Objects detected: %d" % len(tracks)
             for t in tracks:
