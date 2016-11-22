@@ -406,14 +406,16 @@ node n10 {
 	[Location]
 	; Latitude of radar (in decimal degrees)
 	; latitude = -15.870969
-	latitude = -19.723889
+	; latitude = -19.723889
+	latitude = -15.8708333
 	
 	; Longitude of radar (in decimal degrees)
 	; longitude = -47.917024
-	longitude = -47.2980556
+	; longitude = -47.2980556
+	longitude = -47.9169444
 	
 	; Altitude of radar (in meters)
-	altitude = 2681
+	altitude = 10
 	
 	[PSR]
 	
