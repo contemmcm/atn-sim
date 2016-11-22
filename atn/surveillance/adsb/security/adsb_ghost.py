@@ -14,7 +14,7 @@ from ..adsb_out import AdsbOut
 
 class AdsbGhost:
 
-    delay = 70
+    delay = 30
 
     icao24_rewrite = False
     flood = False
@@ -79,6 +79,14 @@ def adsb_replay(message, delay, dev):
     print message
 
 
+def disclaimer():
+    print " DISCLAIMER: This software is for testing and educational"
+    print " purposes only. Any other usage for this code is not allowed."
+    print " Use at your own risk."
+    print
+    print " 'With great power comes great responsibility.' - Uncle Ben"
+
+
 def main():
 
     tx = AdsbGhost()
@@ -91,6 +99,7 @@ def main():
         print " > Flooding with delayed messages"
         tx.flood = True
 
+    disclaimer()
     tx.start()
 
 if __name__ == '__main__':

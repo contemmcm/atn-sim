@@ -61,8 +61,6 @@ class AdsbOut:
                             format='%(asctime)s %(levelname)s: %(message)s')
         self.logger = logging.getLogger("adsb.log")
 
-        print self.nodename
-
     def start(self):
         print " > Initiating ADS-B Out transmission"
         t1 = threading.Thread(target=self._start_airborne_position, args=())
