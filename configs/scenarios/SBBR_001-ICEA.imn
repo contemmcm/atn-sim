@@ -2,15 +2,15 @@ node n1 {
     type router
     model aircraft
     network-config {
-	hostname n1
+	hostname AL3456
 	!
 	interface eth0
 	 ip address 10.0.0.1/24
 	!
     }
     canvas c1
-    iconcoords {376.0 382.0}
-    labelcoords {376.0 414.0}
+    iconcoords {162.0 57.0}
+    labelcoords {162.0 89.0}
     interface-peer {eth0 n6}
     custom-config {
 	custom-config-id service:TrackS
@@ -99,126 +99,6 @@ node n1 {
     services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut}
 }
 
-node n3 {
-    type router
-    model PC
-    network-config {
-	hostname n3
-	!
-	interface eth0
-	 ipv6 address 2001:0::20/128
-	 ip address 10.0.0.20/24
-	!
-    }
-    canvas c1
-    iconcoords {626.0 687.0}
-    labelcoords {626.0 719.0}
-    interface-peer {eth0 n6}
-    services {DefaultRoute}
-}
-
-node n4 {
-    type router
-    model ground-station
-    network-config {
-	hostname n4
-	!
-	interface eth1
-	 ip address 10.0.1.1/24
-	!
-	interface eth0
-	 ip address 10.0.0.3/24
-	!
-    }
-    canvas c1
-    iconcoords {489.0 475.0}
-    labelcoords {489.0 507.0}
-    interface-peer {eth0 n6}
-    interface-peer {eth1 n5}
-    services {zebra OSPFv3MDR vtysh IPForward GPSd Dump1090 AdsbIn}
-    custom-config {
-	custom-config-id service:AdsbIn
-	custom-command AdsbIn
-	config {
-	files=('adsbin.cfg', 'adsbin.sh', )
-	}
-    }
-    custom-config {
-	custom-config-id service:AdsbIn:adsbin.cfg
-	custom-command adsbin.cfg
-	config {
-	[General]
-	id = n4
-	destinations = dst01 dst03
-	
-	[dst01]
-	type = dump1090
-	server = localhost
-	port = 30001
-	
-	;[dst02]
-	;type = database
-	;server = 172.17.255.254
-	;dbname = atn_sim
-	;dbuser = atn_sim
-	;dbpass = atn_sim
-	
-	[dst03]
-	type = asterix
-	server = 10.0.1.2
-	port = 40005
-	
-	
-	}
-    }
-}
-
-node n5 {
-    type router
-    model mdr
-    network-config {
-	hostname n5
-	!
-	interface eth2
-	 ip address 172.16.0.240/24
-	!
-	interface eth1
-	 ip address 10.0.2.1/24
-	 ipv6 address 2001:2::1/64
-	!
-	interface eth0
-	 ip address 10.0.1.2/24
-	 ipv6 address 2001:1::2/64
-	!
-    }
-    canvas c1
-    iconcoords {555.0 314.0}
-    labelcoords {555.0 346.0}
-    interface-peer {eth0 n4}
-    interface-peer {eth1 n7}
-    services {zebra OSPFv3MDR vtysh IPForward AsterixServer}
-    custom-config {
-	custom-config-id service:AsterixServer
-	custom-command AsterixServer
-	config {
-	files=('asterixserver.cfg', 'asterixserver.sh', )
-	}
-    }
-    custom-config {
-	custom-config-id service:AsterixServer:asterixserver.cfg
-	custom-command asterixserver.cfg
-	config {
-	[General]
-	sic = 5
-	port = 40005
-	txport = 50005
-	net = 172.16.0.215
-	
-	}
-    }
-    interface-peer {eth2 n11}
-}
-
 node n6 {
     type wlan
     network-config {
@@ -272,47 +152,27 @@ node n6 {
 	}
     }
     canvas c1
-    iconcoords {31.0 28.0}
-    labelcoords {31.0 60.0}
+    iconcoords {32.0 27.0}
+    labelcoords {32.0 59.0}
     interface-peer {e0 n1}
-    interface-peer {e2 n3}
-    interface-peer {e3 n4}
     interface-peer {e1 n2}
     interface-peer {e4 n8}
-    interface-peer {e5 n10}
-}
-
-node n7 {
-    type router
-    model host
-    network-config {
-	hostname n7
-	!
-	interface eth0
-	 ip address 10.0.2.10/24
-	 ipv6 address 2001:2::10/64
-	!
-    }
-    canvas c1
-    iconcoords {692.0 441.0}
-    labelcoords {692.0 473.0}
-    interface-peer {eth0 n5}
-    services {DefaultRoute SSH Dump1090}
+    interface-peer {e2 n3}
 }
 
 node n2 {
     type router
     model aircraft
     network-config {
-	hostname n2
+	hostname TAM6543
 	!
 	interface eth0
 	 ip address 10.0.0.2/24
 	!
     }
     canvas c1
-    iconcoords {345.0 383.0}
-    labelcoords {345.0 415.0}
+    iconcoords {61.0 569.0}
+    labelcoords {61.0 601.0}
     interface-peer {eth0 n6}
     services {zebra OSPFv3MDR vtysh IPForward DefaultMulticastRoute GPSd AdsbOut}
 }
@@ -321,7 +181,7 @@ node n8 {
     type router
     model host
     network-config {
-	hostname n8
+	hostname trackserver
 	!
 	interface eth0
 	 ip address 10.0.0.10/24
@@ -329,8 +189,8 @@ node n8 {
 	!
     }
     canvas c1
-    iconcoords {955.0 22.0}
-    labelcoords {955.0 54.0}
+    iconcoords {939.0 14.0}
+    labelcoords {939.0 46.0}
     services {DefaultRoute SSH TrackServer}
     interface-peer {eth0 n6}
     custom-config {
@@ -351,47 +211,33 @@ node n8 {
 	; db_pass = atn_sim
 	
 	[Tracks]
-	; server = 172.17.255.254
-	; port = 5006
+	server = 172.17.255.254
+	port = 5006
 	exercise = SBBR
-	n1 = 1
-	n2 = 2
+	; n1 = 1
 	
 	}
     }
+    hidden 1
 }
 
-node n9 {
-    type rj45
-    network-config {
-	hostname eth2.10
-	!
-    }
-    canvas c1
-    iconcoords {507.0 193.0}
-    labelcoords {507.0 225.0}
-    interface-peer {0 n11}
-}
-
-node n10 {
+node n3 {
     type router
     model radar
     network-config {
-	hostname n10
-	!
-	interface eth0
-	 ip address 172.16.0.241/24
+	hostname n3
 	!
 	interface eth1
-	 ip address 10.0.0.4/24
+	 ip address 10.0.0.3/24
+	!
+	interface eth0
 	!
     }
     canvas c1
-    iconcoords {388.0 124.0}
-    labelcoords {388.0 156.0}
-    interface-peer {eth1 n6}
-    services {zebra OSPFv3MDR vtysh IPForward GPSd Radar}
-    interface-peer {eth0 n11}
+    iconcoords {370.0 358.0}
+    labelcoords {370.0 390.0}
+    interface-peer {eth0 n4}
+    services {zebra OSPFv3MDR vtysh IPForward DHCPClient GPSd Radar}
     custom-config {
 	custom-config-id service:Radar
 	custom-command Radar
@@ -405,17 +251,13 @@ node n10 {
 	config {
 	[Location]
 	; Latitude of radar (in decimal degrees)
-	; latitude = -15.870969
-	; latitude = -19.723889
-	latitude = -15.8708333
+	latitude = -15.870969
 	
 	; Longitude of radar (in decimal degrees)
-	; longitude = -47.917024
-	; longitude = -47.2980556
-	longitude = -47.9169444
+	longitude = -47.917024
 	
 	; Altitude of radar (in meters)
-	altitude = 10
+	altitude = 2681
 	
 	[PSR]
 	
@@ -440,55 +282,49 @@ node n10 {
 	[Network]
 	
 	; IP address of the receiver of radar plots (e.g. ATC system)
-	destination = 172.16.0.255
+	destination = 172.18.96.255
 	
 	; Transport layer port of the destination
-	port = 20004
+	port = 60000
 	
 	; Mode of transmission: unicast or broadcast
 	mode = broadcast
 	
 	; Radar protocol to be used
-	protocol = ASTERIX
+	protocol = ICEA
 	
 	}
     }
+    interface-peer {eth1 n6}
 }
 
-node n11 {
+node n4 {
     type lanswitch
     network-config {
-	hostname n11
+	hostname n4
 	!
     }
     canvas c1
-    iconcoords {387.0 271.0}
-    labelcoords {387.0 295.0}
-    interface-peer {e0 n9}
+    iconcoords {504.0 357.0}
+    labelcoords {504.0 381.0}
+    interface-peer {e0 n3}
     interface-peer {e1 n5}
-    interface-peer {e2 n10}
+}
+
+node n5 {
+    type rj45
+    network-config {
+	hostname eth1
+	!
+    }
+    canvas c1
+    iconcoords {650.0 356.0}
+    labelcoords {650.0 388.0}
+    interface-peer {0 n4}
 }
 
 link l1 {
     nodes {n6 n1}
-}
-
-link l3 {
-    nodes {n6 n3}
-}
-
-link l4 {
-    nodes {n6 n4}
-}
-
-link l5 {
-    nodes {n4 n5}
-    bandwidth 0
-}
-
-link l6 {
-    nodes {n5 n7}
-    bandwidth 0
 }
 
 link l2 {
@@ -499,34 +335,29 @@ link l7 {
     nodes {n6 n8}
 }
 
-link l10 {
-    nodes {n6 n10}
-}
-
-link l8 {
-    nodes {n11 n9}
-}
-
-link l9 {
-    nodes {n11 n5}
+link l3 {
+    nodes {n3 n4}
     bandwidth 0
 }
 
-link l11 {
-    nodes {n11 n10}
-    bandwidth 0
+link l4 {
+    nodes {n4 n5}
+}
+
+link l5 {
+    nodes {n6 n3}
 }
 
 canvas c1 {
     name {Canvas1}
-    refpt {0 0 -15.343608 -48.400366 2.0}
-    scale {14000.0}
+    refpt {0 0 -15.485570 -48.337519 2.0}
+    scale {12000.0}
     size {1000 750}
 }
 
 option global {
     interface_names no
-    ip_addresses yes
+    ip_addresses no
     ipv6_addresses no
     node_labels yes
     link_labels yes
