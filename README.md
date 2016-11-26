@@ -3,7 +3,7 @@ Aeronautical Telecommunications Network (ATN) Simulator
 
 ## Quick Installation
 
-The following procedures were tested on Ubuntu 12.04 and Ubuntu 14.04. If that is not your case, please refer to section [Detailed Install](#detailed-install).
+The following procedures were tested on Ubuntu 12.04 and Ubuntu 14.04. If that is not your case, please refer to section [Detailed Install](#https://github.com/contemmcm/atn-sim/wiki/Install).
 
 ```
 git clone --recursive https://github.com/contemmcm/atn-sim
